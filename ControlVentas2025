@@ -1,0 +1,622 @@
+<script src="https://cdn.tailwindcss.com"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
+<script src="https://unpkg.com/recharts@2.1.12/umd/Recharts.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    body { background-color: #f8fafc; font-family: 'Inter', sans-serif; color: #334155; }
+    
+    /* Spinner rojo */
+    .spinner { width: 40px; height: 40px; border: 3px solid #e2e8f0; border-top-color: #e11d48; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    /* Tarjetas Minimalistas */
+    .card-pro { 
+        background-color: white; 
+        border: 1px solid #e2e8f0; 
+        border-radius: 8px; 
+        box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); 
+        transition: all 0.3s ease;
+    }
+    .card-pro:hover { 
+        transform: translateY(-2px); 
+        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); 
+        border-color: #cbd5e1;
+    }
+
+    .clickable-chart .recharts-rectangle { cursor: pointer; }
+    .gauge-container { position: relative; width: 100%; height: 100px; display: flex; justify-content: center; overflow: hidden; margin-bottom: 5px; }
+    .gauge-value { position: absolute; bottom: 0px; width: 100%; text-align: center; line-height: 1; z-index: 10; }
+</style>
+
+<div id="root"></div>
+
+<script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+    const { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, LabelList } = Recharts;
+
+    // ---------------------------------------------------------
+    // 🔧 CONFIGURACIÓN
+    // ---------------------------------------------------------
+    const SPREADSHEET_ID = '1Ylk3tn1yQcdnDHFrskYvxdJYrKP_PoxtHulu4jMl8uA';
+    const TAB_1 = 'Data Pestañas';      
+    const TAB_2 = 'Campañas MX 2025';   
+    
+    const COLUMNA_COSTO = 'COSTO'; 
+    const COLUMNA_VENDEDOR = 'VENDEDOR'; 
+    const COLUMNA_MES = 'MES';
+    const COLUMNA_UDN = 'UDN';
+    const COLUMNA_CONTENIDO = 'CONTENIDO';
+
+    // 🎨 PALETA DE COLORES "RED & SLATE"
+    const COLORS = {
+        primary: '#be123c',   // Rose 700 (Principal fuerte)
+        secondary: '#fb7185', // Rose 400 (Secundario suave)
+        accent: '#9f1239',    // Rose 800 (Acento oscuro)
+        textDark: '#1e293b',  // Slate 800
+        textLight: '#64748b', // Slate 500
+        inactive: '#e2e8f0',  // Slate 200
+        
+        // Semáforo para acelerómetros (Más sobrio)
+        gaugeRed: '#ef4444',
+        gaugeYellow: '#f59e0b',
+        gaugeGreen: '#10b981'
+    };
+
+    const COLUMNAS_TABLA = ['MES', 'VENDEDOR', 'CLIENTE', 'NOMBRE DE LA CAMPANA', 'ESTATUS', 'COSTO', 'FECHA INICIO', 'FECHA FIN', 'DIAS'];
+
+    const METAS_DETALLADAS = {
+        "ANGELA RAMIREZ": [332010, 422220, 576600, 581064, 761484, 796080, 634260, 662160, 736560, 736560, 585900, 783060],
+        "CLAUDIA RAMIREZ": [353430, 449460, 613800, 695242, 810612, 847440, 813674, 843374, 922574, 911933, 751553, 961433],
+        "MARIANA GONZALEZ": [310590, 394980, 539400, 653321, 822101, 854465, 778490, 804590, 874190, 859634, 843231, 849231],
+        "MITZI VERA": [235620, 299640, 409200, 482521, 610561, 635113, 583939, 603739, 656539, 723449, 616529, 756449],
+        "ERIK FINKENTHAL": [300000, 204000, 366937, 418140, 476200, 403328, 437272, 347292, 437576, 0, 0, 0], 
+        "ZINNIA SANCHEZ": [400000, 414000, 418000, 805000, 845000, 754220, 734639, 693222, 711069, 320000, 430000, 450000],
+        "CLAUDIA SALDANA": [272420, 263110, 266000, 555146, 420779, 445000, 437272, 347292, 437576, 370000, 390000, 550000],
+        "NADIA": [0, 0, 0, 272420, 263110, 266000, 594423, 607242, 484614, 0, 0, 0], 
+        "HORACIO": [300000, 550000, 600000, 650000, 700000, 700000, 800000, 800000, 800000, 700000, 700000, 700000]
+    };
+
+    const getMesIndex = (nombreMes) => {
+        if (!nombreMes) return -1;
+        const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+        return meses.indexOf(nombreMes.toLowerCase().trim());
+    };
+
+    const formatMoneyShort = (value) => {
+        if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
+        if (value >= 1000) return `$${(value / 1000).toFixed(0)}k`;
+        return value;
+    };
+
+    const formatMoney = (amount) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(amount);
+    const formatPercent = (val) => val.toFixed(1) + '%';
+
+    // --- COMPONENTES ---
+
+    const KpiCard = ({ title, value, icon, subtext = "" }) => (
+        <div className="card-pro p-6 flex flex-col justify-between h-full relative overflow-hidden border-l-4 border-rose-600">
+            <div className="flex justify-between items-start mb-4">
+                <div>
+                    <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">{title}</p>
+                    <h3 className="text-2xl font-bold text-slate-800 tracking-tight">{value}</h3>
+                </div>
+                <div className="p-2 rounded-full bg-rose-50 text-rose-600">
+                    {icon}
+                </div>
+            </div>
+            {subtext && <div className="text-xs text-slate-400 font-medium border-t border-slate-100 pt-2 mt-auto">{subtext}</div>}
+        </div>
+    );
+
+    const GaugeChart = ({ nombre, vendido, meta, filtrosMes }) => {
+        const porcentaje = meta > 0 ? (vendido / meta) * 100 : 0;
+        const visualValue = Math.min(porcentaje, 100);
+        
+        let color = COLORS.gaugeRed; 
+        if (porcentaje >= 50) color = COLORS.gaugeYellow; 
+        if (porcentaje >= 90) color = COLORS.gaugeGreen; 
+        
+        const data = [{ name: 'Progress', value: visualValue }, { name: 'Remaining', value: 100 - visualValue }];
+        const labelMeta = filtrosMes && filtrosMes.length > 0 ? `META (${filtrosMes.length} MESES)` : 'META ANUAL';
+
+        return (
+            <div className="card-pro p-6 flex flex-col items-center relative">
+                <div className="w-full flex justify-between items-center mb-1 border-b border-slate-100 pb-2">
+                    <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider truncate mr-2" title={nombre}>{nombre}</h4>
+                    {porcentaje >= 100 && <span className="bg-emerald-100 text-emerald-800 text-[9px] px-2 py-0.5 rounded-full font-bold tracking-wide">CUMPLIDO</span>}
+                </div>
+                <div className="gauge-container mt-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                            <Pie data={data} cx="50%" cy="100%" startAngle={180} endAngle={0} innerRadius="78%" outerRadius="100%" paddingAngle={0} dataKey="value" stroke="none">
+                                <Cell fill={color} />
+                                <Cell fill="#f1f5f9" />
+                            </Pie>
+                        </PieChart>
+                    </ResponsiveContainer>
+                    <div className="gauge-value"><span className="text-xl font-bold tracking-tight" style={{color: color}}>{porcentaje.toFixed(1)}%</span></div>
+                </div>
+                <div className="w-full mt-2 pt-2 grid grid-cols-2 gap-2 text-[10px]">
+                    <div><p className="text-slate-400 font-bold uppercase">Vendido</p><p className="font-semibold text-slate-700 text-xs">{formatMoney(vendido)}</p></div>
+                    <div className="text-right"><p className="text-slate-400 font-bold uppercase">{labelMeta}</p><p className="font-semibold text-slate-700 text-xs">{formatMoney(meta)}</p></div>
+                </div>
+            </div>
+        );
+    };
+
+    const Dashboard = () => {
+        const [rawData1, setRawData1] = useState([]); 
+        const [rawData2, setRawData2] = useState([]); 
+        const [filtrosVendedor, setFiltrosVendedor] = useState([]); 
+        const [filtrosMes, setFiltrosMes] = useState([]); 
+        const [filtrosUDN, setFiltrosUDN] = useState([]); 
+        const [loading, setLoading] = useState(true);
+        const [error, setError] = useState(null);
+
+        useEffect(() => {
+            const fetchData = async () => {
+                try {
+                    const url1 = `https://opensheet.elk.sh/${SPREADSHEET_ID}/${encodeURIComponent(TAB_1)}`;
+                    const url2 = `https://opensheet.elk.sh/${SPREADSHEET_ID}/${encodeURIComponent(TAB_2)}`;
+                    const [res1, res2] = await Promise.all([fetch(url1), fetch(url2)]);
+                    if (!res1.ok || !res2.ok) throw new Error("Error conectando con Google Sheets");
+                    const json1 = await res1.json();
+                    const json2 = await res2.json();
+                    setRawData1(json1);
+                    setRawData2(json2);
+                    setLoading(false);
+                } catch (err) {
+                    console.error(err);
+                    setError(err.message);
+                    setLoading(false);
+                }
+            };
+            fetchData();
+        }, []);
+
+        const toggleFiltro = (setFunction, valor) => {
+            setFunction(prev => prev.includes(valor) ? prev.filter(item => item !== valor) : [...prev, valor]);
+        };
+
+        const limpiarFiltros = () => {
+            setFiltrosVendedor([]);
+            setFiltrosMes([]);
+            setFiltrosUDN([]);
+        };
+
+        const filtrarDatos = (datos) => {
+            return datos.filter(row => {
+                const passVendedor = filtrosVendedor.length === 0 || filtrosVendedor.includes(row[COLUMNA_VENDEDOR]);
+                const passMes = filtrosMes.length === 0 || filtrosMes.includes(row[COLUMNA_MES]);
+                const passUDN = filtrosUDN.length === 0 || filtrosUDN.includes(row[COLUMNA_UDN]);
+                return passVendedor && passMes && passUDN;
+            });
+        };
+
+        const data1 = useMemo(() => filtrarDatos(rawData1), [rawData1, filtrosVendedor, filtrosMes, filtrosUDN]);
+        const data2 = useMemo(() => filtrarDatos(rawData2), [rawData2, filtrosVendedor, filtrosMes, filtrosUDN]);
+
+        const sumarColumna = (dataset, nombreColumna) => {
+            if (!dataset || dataset.length === 0) return 0;
+            return dataset.reduce((acumulado, fila) => {
+                let valor = fila[nombreColumna];
+                if (!valor) return acumulado;
+                if (typeof valor === 'string') valor = valor.replace(/[^0-9.-]+/g,"");
+                return acumulado + (parseFloat(valor) || 0);
+            }, 0);
+        };
+
+        const countPropuestas = data1.length;
+        const countCerradas = data2.length;
+        const montoPropuestas = sumarColumna(data1, COLUMNA_COSTO);
+        const montoVentas = sumarColumna(data2, COLUMNA_COSTO);
+        const tasaConversionQty = countPropuestas > 0 ? (countCerradas / countPropuestas) * 100 : 0;
+        const tasaConversionMonto = montoPropuestas > 0 ? (montoVentas / montoPropuestas) * 100 : 0;
+
+        // --- PREPARACIÓN DE DATOS (GRÁFICAS) ---
+        
+        // 1. VENDEDORES
+        const getBaseDataVendedores = () => rawData2.filter(row => 
+            (filtrosMes.length === 0 || filtrosMes.includes(row[COLUMNA_MES])) &&
+            (filtrosUDN.length === 0 || filtrosUDN.includes(row[COLUMNA_UDN]))
+        );
+
+        const datosVendedoresCantidad = useMemo(() => {
+            const baseData = getBaseDataVendedores();
+            const conteo = baseData.reduce((acc, row) => {
+                const vendedor = row[COLUMNA_VENDEDOR] || 'Sin Asignar';
+                acc[vendedor] = (acc[vendedor] || 0) + 1;
+                return acc;
+            }, {});
+            return Object.keys(conteo).map(key => ({ name: key, valor: conteo[key] })).sort((a, b) => b.valor - a.valor);
+        }, [rawData2, filtrosMes, filtrosUDN]);
+
+        const datosVendedoresMonto = useMemo(() => {
+            const baseData = getBaseDataVendedores();
+            const suma = baseData.reduce((acc, row) => {
+                const vendedor = row[COLUMNA_VENDEDOR] || 'Sin Asignar';
+                let valor = row[COLUMNA_COSTO];
+                if (typeof valor === 'string') valor = parseFloat(valor.replace(/[^0-9.-]+/g,""));
+                acc[vendedor] = (acc[vendedor] || 0) + (valor || 0);
+                return acc;
+            }, {});
+            return Object.keys(suma).map(key => ({ name: key, valor: suma[key] })).sort((a, b) => b.valor - a.valor);
+        }, [rawData2, filtrosMes, filtrosUDN]);
+
+        // 2. MESES
+        const getBaseDataMeses = () => rawData2.filter(row => 
+            (filtrosVendedor.length === 0 || filtrosVendedor.includes(row[COLUMNA_VENDEDOR])) &&
+            (filtrosUDN.length === 0 || filtrosUDN.includes(row[COLUMNA_UDN]))
+        );
+
+        const datosMesesCantidad = useMemo(() => {
+            const baseData = getBaseDataMeses();
+            const conteo = baseData.reduce((acc, row) => {
+                const mes = row[COLUMNA_MES] || 'Sin Fecha';
+                acc[mes] = (acc[mes] || 0) + 1;
+                return acc;
+            }, {});
+            const ordenMeses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+            return Object.keys(conteo).map(key => ({ name: key, valor: conteo[key] })).sort((a, b) => {
+                const idxA = ordenMeses.indexOf(a.name.toLowerCase());
+                const idxB = ordenMeses.indexOf(b.name.toLowerCase());
+                return (idxA !== -1 && idxB !== -1) ? idxA - idxB : 0;
+            });
+        }, [rawData2, filtrosVendedor, filtrosUDN]);
+
+        const datosMesesMonto = useMemo(() => {
+            const baseData = getBaseDataMeses();
+            const suma = baseData.reduce((acc, row) => {
+                const mes = row[COLUMNA_MES] || 'Sin Fecha';
+                let valor = row[COLUMNA_COSTO];
+                if (typeof valor === 'string') valor = parseFloat(valor.replace(/[^0-9.-]+/g,""));
+                acc[mes] = (acc[mes] || 0) + (valor || 0);
+                return acc;
+            }, {});
+            const ordenMeses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+            return Object.keys(suma).map(key => ({ name: key, valor: suma[key] })).sort((a, b) => {
+                const idxA = ordenMeses.indexOf(a.name.toLowerCase());
+                const idxB = ordenMeses.indexOf(b.name.toLowerCase());
+                return (idxA !== -1 && idxB !== -1) ? idxA - idxB : 0;
+            });
+        }, [rawData2, filtrosVendedor, filtrosUDN]);
+
+        // 3. UDN
+        const datosUDNMonto = useMemo(() => {
+            const baseData = rawData2.filter(row => 
+                (filtrosVendedor.length === 0 || filtrosVendedor.includes(row[COLUMNA_VENDEDOR])) &&
+                (filtrosMes.length === 0 || filtrosMes.includes(row[COLUMNA_MES]))
+            );
+            const suma = baseData.reduce((acc, row) => {
+                const udn = row[COLUMNA_UDN] || 'Sin UDN';
+                let valor = row[COLUMNA_COSTO];
+                if (typeof valor === 'string') valor = parseFloat(valor.replace(/[^0-9.-]+/g,""));
+                acc[udn] = (acc[udn] || 0) + (valor || 0);
+                return acc;
+            }, {});
+            return Object.keys(suma).map(key => ({ name: key, valor: suma[key] })).sort((a, b) => b.valor - a.valor);
+        }, [rawData2, filtrosVendedor, filtrosMes]);
+
+        // 4. TOP 10 CONTENIDO
+        const datosTopContenido = useMemo(() => {
+            const baseData = data2; 
+            const suma = baseData.reduce((acc, row) => {
+                const contenido = row[COLUMNA_CONTENIDO] || 'Sin Contenido';
+                let valor = row[COLUMNA_COSTO];
+                if (typeof valor === 'string') valor = parseFloat(valor.replace(/[^0-9.-]+/g,""));
+                acc[contenido] = (acc[contenido] || 0) + (valor || 0);
+                return acc;
+            }, {});
+            return Object.keys(suma)
+                .map(key => ({ name: key, valor: suma[key] }))
+                .sort((a, b) => b.valor - a.valor)
+                .slice(0, 10);
+        }, [data2]);
+
+        // --- ACELERÓMETROS ---
+        const datosAcelerometros = useMemo(() => {
+            const ventasPorVendedor = {};
+            data2.forEach(row => {
+                const nombreSheet = row[COLUMNA_VENDEDOR];
+                let valor = row[COLUMNA_COSTO];
+                if (typeof valor === 'string') valor = parseFloat(valor.replace(/[^0-9.-]+/g,""));
+                if (nombreSheet) {
+                    const nombreNorm = nombreSheet.trim().toUpperCase();
+                    ventasPorVendedor[nombreNorm] = (ventasPorVendedor[nombreNorm] || 0) + (valor || 0);
+                }
+            });
+
+            return Object.keys(METAS_DETALLADAS).map(nombreMeta => {
+                const nombreNorm = nombreMeta.toUpperCase();
+                let vendido = 0;
+                const matchKey = Object.keys(ventasPorVendedor).find(k => k.includes(nombreNorm) || nombreNorm.includes(k));
+                if (matchKey) vendido = ventasPorVendedor[matchKey];
+
+                const metasArray = METAS_DETALLADAS[nombreMeta];
+                let metaTotal = 0;
+                if (filtrosMes.length > 0) {
+                     filtrosMes.forEach(mesNombre => {
+                         const idx = getMesIndex(mesNombre);
+                         if (idx !== -1) metaTotal += metasArray[idx];
+                     });
+                } else {
+                    metaTotal = metasArray.reduce((a, b) => a + b, 0);
+                }
+                return { nombre: nombreMeta, meta: metaTotal, vendido: vendido };
+            }).sort((a, b) => b.vendido - a.vendido);
+        }, [data2, filtrosMes]);
+
+        const getBarColor = (name, filtrosActivos, activeColor, inactiveColor) => {
+            if (filtrosActivos.length === 0) return activeColor;
+            return filtrosActivos.includes(name) ? activeColor : inactiveColor;
+        };
+
+        const hayFiltrosActivos = filtrosVendedor.length > 0 || filtrosMes.length > 0 || filtrosUDN.length > 0;
+        const acelerometrosVisibles = datosAcelerometros.filter(v => {
+            if (!hayFiltrosActivos) return true; 
+            return v.vendido > 0; 
+        });
+
+        if (loading) return <div className="h-screen flex flex-col items-center justify-center bg-slate-50"><div className="spinner mb-4"></div><p className="text-slate-500 font-medium animate-pulse text-sm">Sincronizando datos...</p></div>;
+        if (error) return <div className="h-screen flex items-center justify-center text-red-600 font-bold">{error}</div>;
+
+        // Iconos SVG (Optimizados en color Slate)
+        const IconCheck = <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>;
+        const IconFile = <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>;
+        const IconMoney = <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>;
+        const IconPercent = <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="5" x2="5" y2="19"></line><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></svg>;
+        const IconFunnel = <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>;
+
+        return (
+            <div className="p-6 md:p-12 max-w-[1600px] mx-auto min-h-screen">
+                
+                {/* HEADER */}
+                <header className="mb-10 pb-6 flex flex-col md:flex-row justify-between items-end border-b border-slate-200 bg-white p-6 -mx-6 md:-mx-12 -mt-6 md:-mt-12 sticky top-0 z-50 shadow-sm">
+                    <div>
+                        <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Dashboard Ejecutivo 2025</h1>
+                        <p className="text-slate-500 mt-1 text-sm font-medium">Control Financiero y Comercial</p>
+                    </div>
+                    <div className="text-right flex flex-col items-end gap-2 mt-4 md:mt-0">
+                        {(filtrosVendedor.length > 0 || filtrosMes.length > 0 || filtrosUDN.length > 0) && (
+                            <button onClick={limpiarFiltros} className="text-xs text-rose-600 font-bold hover:text-rose-800 mb-1 transition-colors flex items-center">
+                                <span className="mr-1">✕</span> Borrar Filtros
+                            </button>
+                        )}
+                        <div className="flex flex-wrap justify-end gap-2">
+                            {filtrosVendedor.map(v => (
+                                <span key={v} onClick={() => toggleFiltro(setFiltrosVendedor, v)} className="bg-rose-700 text-white px-3 py-1 rounded-md text-xs font-semibold cursor-pointer hover:bg-slate-700 transition-colors shadow-sm">{v} ✕</span>
+                            ))}
+                            {filtrosMes.map(m => (
+                                <span key={m} onClick={() => toggleFiltro(setFiltrosMes, m)} className="bg-slate-600 text-white px-3 py-1 rounded-md text-xs font-semibold cursor-pointer hover:bg-rose-700 transition-colors shadow-sm">{m} ✕</span>
+                            ))}
+                            {filtrosUDN.map(u => (
+                                <span key={u} onClick={() => toggleFiltro(setFiltrosUDN, u)} className="bg-rose-500 text-white px-3 py-1 rounded-md text-xs font-semibold cursor-pointer hover:bg-slate-700 transition-colors shadow-sm">{u} ✕</span>
+                            ))}
+                            {!hayFiltrosActivos && (
+                                <span className="bg-slate-50 border border-slate-200 text-slate-400 px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider">Vista General</span>
+                            )}
+                        </div>
+                    </div>
+                </header>
+
+                {/* KPIs */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                    <KpiCard title="Campañas Cerradas" value={countCerradas} icon={IconCheck} subtext="Total acumulado" />
+                    <KpiCard title="Monto Vendido" value={formatMoney(montoVentas)} icon={IconMoney} subtext="Ingreso real (Costo)" />
+                    <KpiCard title="Tasa Conversión (Cant)" value={formatPercent(tasaConversionQty)} icon={IconFunnel} subtext="Eficiencia operativa" />
+                    <KpiCard title="Campañas Propuestas" value={countPropuestas} icon={IconFile} subtext="Total en pipeline" />
+                    <KpiCard title="Monto Propuestas" value={formatMoney(montoPropuestas)} icon={IconMoney} subtext="Valor del pipeline" />
+                    <KpiCard title="Tasa Conversión (Monto)" value={formatPercent(tasaConversionMonto)} icon={IconPercent} subtext="Eficiencia económica" />
+                </div>
+
+                {/* VENDEDOR GRÁFICAS */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    {/* Cantidad Vendedor */}
+                    <div className="card-pro p-6">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-sm font-bold text-slate-700 flex items-center uppercase tracking-wider"><span className="w-1 h-4 bg-rose-600 rounded mr-2"></span>Ventas (Cant)</h2>
+                        </div>
+                        <div className="h-[20rem] w-full clickable-chart">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={datosVendedoresCantidad} onClick={(d) => d && d.activePayload && toggleFiltro(setFiltrosVendedor, d.activePayload[0].payload.name)} margin={{top: 20, right: 10, left: 0, bottom: 60}}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                    <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} tick={{fontSize: 10, fill: '#64748b', fontWeight: 500}} tickLine={false} axisLine={false} dy={10} />
+                                    <YAxis fontSize={11} tickLine={false} axisLine={false} stroke="#94a3b8" />
+                                    <Tooltip cursor={{fill: '#fff1f2'}} contentStyle={{borderRadius:'8px', border:'none', boxShadow:'0 4px 6px -1px rgba(0,0,0,0.1)'}} />
+                                    <Bar dataKey="valor" radius={[4, 4, 0, 0]}>
+                                        {datosVendedoresCantidad.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={getBarColor(entry.name, filtrosVendedor, COLORS.primary, COLORS.inactive)} className="transition-all duration-300" />
+                                        ))}
+                                        <LabelList dataKey="valor" position="top" style={{fontSize: '11px', fontWeight: 'bold', fill: '#475569'}} />
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+
+                    {/* Monto Vendedor */}
+                    <div className="card-pro p-6">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-sm font-bold text-slate-700 flex items-center uppercase tracking-wider"><span className="w-1 h-4 bg-rose-800 rounded mr-2"></span>Ventas (Dinero)</h2>
+                        </div>
+                        <div className="h-[20rem] w-full clickable-chart">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={datosVendedoresMonto} onClick={(d) => d && d.activePayload && toggleFiltro(setFiltrosVendedor, d.activePayload[0].payload.name)} margin={{top: 20, right: 10, left: 0, bottom: 60}}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                    <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} tick={{fontSize: 10, fill: '#64748b', fontWeight: 500}} tickLine={false} axisLine={false} dy={10} />
+                                    <YAxis fontSize={11} tickLine={false} axisLine={false} tickFormatter={formatMoneyShort} stroke="#94a3b8" />
+                                    <Tooltip cursor={{fill: '#fff1f2'}} contentStyle={{borderRadius:'8px', border:'none', boxShadow:'0 4px 6px -1px rgba(0,0,0,0.1)'}} formatter={(value) => formatMoney(value)} />
+                                    <Bar dataKey="valor" radius={[4, 4, 0, 0]}>
+                                        {datosVendedoresMonto.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={getBarColor(entry.name, filtrosVendedor, COLORS.accent, COLORS.inactive)} className="transition-all duration-300" />
+                                        ))}
+                                        <LabelList dataKey="valor" position="top" formatter={formatMoneyShort} style={{fontSize: '11px', fontWeight: 'bold', fill: '#475569'}} />
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                </div>
+
+                {/* MESES GRÁFICAS */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    {/* Cantidad Mes */}
+                    <div className="card-pro p-6">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-sm font-bold text-slate-700 flex items-center uppercase tracking-wider"><span className="w-1 h-4 bg-slate-500 rounded mr-2"></span>Tendencia (Cant)</h2>
+                        </div>
+                        <div className="h-[20rem] w-full clickable-chart">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={datosMesesCantidad} onClick={(d) => d && d.activePayload && toggleFiltro(setFiltrosMes, d.activePayload[0].payload.name)} margin={{top: 20, right: 10, left: 0, bottom: 30}}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                    <XAxis dataKey="name" interval={0} tick={{fontSize: 10, fill: '#64748b', fontWeight: 500}} tickLine={false} axisLine={false} />
+                                    <YAxis fontSize={11} tickLine={false} axisLine={false} stroke="#94a3b8" />
+                                    <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{borderRadius:'8px', border:'none', boxShadow:'0 4px 6px -1px rgba(0,0,0,0.1)'}} />
+                                    <Bar dataKey="valor" radius={[4, 4, 0, 0]}>
+                                        {datosMesesCantidad.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={getBarColor(entry.name, filtrosMes, COLORS.textLight, COLORS.inactive)} className="transition-all duration-300" />
+                                        ))}
+                                        <LabelList dataKey="valor" position="top" style={{fontSize: '11px', fontWeight: 'bold', fill: '#475569'}} />
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                    {/* Monto Mes */}
+                    <div className="card-pro p-6">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-sm font-bold text-slate-700 flex items-center uppercase tracking-wider"><span className="w-1 h-4 bg-slate-600 rounded mr-2"></span>Tendencia (Dinero)</h2>
+                        </div>
+                        <div className="h-[20rem] w-full clickable-chart">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={datosMesesMonto} onClick={(d) => d && d.activePayload && toggleFiltro(setFiltrosMes, d.activePayload[0].payload.name)} margin={{top: 20, right: 10, left: 0, bottom: 30}}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                    <XAxis dataKey="name" interval={0} tick={{fontSize: 10, fill: '#64748b', fontWeight: 500}} tickLine={false} axisLine={false} />
+                                    <YAxis fontSize={11} tickLine={false} axisLine={false} tickFormatter={formatMoneyShort} stroke="#94a3b8" />
+                                    <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{borderRadius:'8px', border:'none', boxShadow:'0 4px 6px -1px rgba(0,0,0,0.1)'}} formatter={(value) => formatMoney(value)} />
+                                    <Bar dataKey="valor" radius={[4, 4, 0, 0]}>
+                                        {datosMesesMonto.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={getBarColor(entry.name, filtrosMes, COLORS.textDark, COLORS.inactive)} className="transition-all duration-300" />
+                                        ))}
+                                        <LabelList dataKey="valor" position="top" formatter={formatMoneyShort} style={{fontSize: '11px', fontWeight: 'bold', fill: '#475569'}} />
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                </div>
+
+                {/* METAS Y ACELERÓMETROS */}
+                <div className="mb-12">
+                     <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center justify-between px-2 border-l-4 border-rose-500 pl-4">
+                        <span className="flex items-center">Cumplimiento de Metas</span>
+                        <span className="text-xs bg-white border border-slate-200 text-slate-500 px-3 py-1 rounded-md font-medium">
+                            {filtrosMes.length > 0 ? `Meta Acumulada (${filtrosMes.length} meses)` : 'Meta Anual'}
+                        </span>
+                    </h2>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {acelerometrosVisibles.map((vendedor, index) => (
+                            <GaugeChart 
+                                key={index}
+                                nombre={vendedor.nombre}
+                                vendido={vendedor.vendido}
+                                meta={vendedor.meta}
+                                filtrosMes={filtrosMes}
+                            />
+                        ))}
+                    </div>
+                </div>
+
+                {/* UDN GRAPH */}
+                <div className="mb-12 card-pro p-6">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-sm font-bold text-slate-700 flex items-center uppercase tracking-wider"><span className="w-1 h-4 bg-rose-400 rounded mr-2"></span>Ventas por UDN</h2>
+                        <span className="text-xs text-slate-400 font-medium">Clic para filtrar</span>
+                    </div>
+                    <div className="h-[24rem] w-full clickable-chart">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={datosUDNMonto} onClick={(d) => d && d.activePayload && toggleFiltro(setFiltrosUDN, d.activePayload[0].payload.name)} margin={{top: 20, right: 10, left: 0, bottom: 30}}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                <XAxis dataKey="name" interval={0} tick={{fontSize: 11, fill: '#64748b', fontWeight: 500}} tickLine={false} axisLine={false} />
+                                <YAxis fontSize={11} tickLine={false} axisLine={false} tickFormatter={formatMoneyShort} stroke="#94a3b8" />
+                                <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{borderRadius:'8px', border:'none', boxShadow:'0 4px 6px -1px rgba(0,0,0,0.1)'}} formatter={(value) => formatMoney(value)} />
+                                <Bar dataKey="valor" radius={[4, 4, 0, 0]}>
+                                    {datosUDNMonto.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={getBarColor(entry.name, filtrosUDN, COLORS.secondary, COLORS.inactive)} className="transition-all duration-300" />
+                                    ))}
+                                    <LabelList dataKey="valor" position="top" formatter={formatMoneyShort} style={{fontSize: '11px', fontWeight: 'bold', fill: '#475569'}} />
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                {/* TOP 10 CONTENIDO */}
+                <div className="mb-12 card-pro p-6">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-sm font-bold text-slate-700 flex items-center uppercase tracking-wider"><span className="w-1 h-4 bg-slate-800 rounded mr-2"></span>Top 10 Contenidos</h2>
+                        <span className="text-xs text-slate-400 font-medium">Más Rentables</span>
+                    </div>
+                    <div className="h-[24rem] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={datosTopContenido} margin={{top: 20, right: 10, left: 0, bottom: 60}}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} tick={{fontSize: 10, fill: '#64748b', fontWeight: 500}} tickLine={false} axisLine={false} dy={10} />
+                                <YAxis fontSize={11} tickLine={false} axisLine={false} tickFormatter={formatMoneyShort} stroke="#94a3b8" />
+                                <Tooltip cursor={{fill: '#fff1f2'}} contentStyle={{borderRadius:'8px', border:'none', boxShadow:'0 4px 6px -1px rgba(0,0,0,0.1)'}} formatter={(value) => formatMoney(value)} />
+                                <Bar dataKey="valor" radius={[4, 4, 0, 0]} fill={COLORS.textDark}>
+                                    <LabelList dataKey="valor" position="top" formatter={formatMoneyShort} style={{fontSize: '11px', fontWeight: 'bold', fill: '#475569'}} />
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                {/* TABLA DE DETALLE */}
+                <div className="w-full card-pro p-0 overflow-hidden mb-12">
+                    <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                        <h2 className="text-sm font-bold text-slate-700 flex items-center uppercase tracking-wider"><span className="w-1 h-4 bg-rose-600 rounded mr-2"></span>Detalle Operativo</h2>
+                        <span className="text-xs font-bold text-slate-500 bg-white border border-slate-200 px-3 py-1 rounded-md">{data2.length} Registros</span>
+                    </div>
+                    <div className="overflow-auto flex-1 p-0">
+                        <table className="w-full text-left text-xs">
+                            <thead className="bg-slate-50 sticky top-0 z-10">
+                                <tr>
+                                    {COLUMNAS_TABLA.map(k => (
+                                        <th key={k} className={`px-6 py-4 font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200 ${k === 'NOMBRE DE LA CAMPANA' ? 'w-48' : 'whitespace-nowrap'}`}>
+                                            {k}
+                                        </th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {data2.map((row, i) => (
+                                    <tr key={i} className="hover:bg-slate-50/80 transition-colors">
+                                        {COLUMNAS_TABLA.map(k => (
+                                            <td key={k} className={`px-6 py-4 text-slate-700 font-medium ${k === 'NOMBRE DE LA CAMPANA' ? 'max-w-[200px] truncate' : 'whitespace-nowrap'}`}>
+                                                {row[k] || '-'}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div className="text-center mt-12 mb-6 text-slate-400 text-xs font-medium">
+                    Dashboard Ejecutivo &bull; Actualización en Tiempo Real
+                </div>
+            </div>
+        );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<Dashboard />);
+</script>
