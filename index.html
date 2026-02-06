@@ -1,37 +1,60 @@
-<script src="https://cdn.tailwindcss.com"></script>
-<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-<script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
-<script src="https://unpkg.com/recharts@2.1.12/umd/Recharts.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suite Integral de Reportes 2026</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
+    <script src="https://unpkg.com/recharts@2.1.12/umd/Recharts.js"></script>
+    
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    
-    body { background-color: #f8fafc; font-family: 'Inter', sans-serif; color: #334155; }
-    
-    /* Spinner rojo */
-    .spinner { width: 40px; height: 40px; border: 3px solid #e2e8f0; border-top-color: #e11d48; border-radius: 50%; animation: spin 0.8s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    
-    /* Tarjetas Minimalistas con Hover Efecto */
-    .card-pro { 
-        background-color: white; 
-        border: 1px solid #e2e8f0; 
-        border-radius: 8px; 
-        box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); 
-        transition: all 0.3s ease;
-    }
-    .card-pro:hover { 
-        transform: translateY(-2px); 
-        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); 
-        border-color: #cbd5e1;
-    }
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        body { background-color: #f8fafc; font-family: 'Inter', sans-serif; color: #334155; }
+        
+        /* Spinner rojo (del código original) */
+        .spinner { width: 40px; height: 40px; border: 3px solid #e2e8f0; border-top-color: #e11d48; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-    .clickable-chart .recharts-rectangle { cursor: pointer; }
-    .gauge-container { position: relative; width: 100%; height: 100px; display: flex; justify-content: center; overflow: hidden; margin-bottom: 5px; }
-    .gauge-value { position: absolute; bottom: 0px; width: 100%; text-align: center; line-height: 1; z-index: 10; }
-</style>
+        /* Estilos específicos Tab 1 (Estrategia) para igualar tu HTML original */
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .txt-shadow { filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1)); }
+
+        /* Estilos Tab 2 (Ventas) originales */
+        .card-pro { 
+            background-color: white; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 8px; 
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); 
+            transition: all 0.3s ease;
+        }
+        .card-pro:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); 
+            border-color: #cbd5e1;
+        }
+        .clickable-chart .recharts-rectangle { cursor: pointer; }
+        .gauge-container { position: relative; width: 100%; height: 100px; display: flex; justify-content: center; overflow: hidden; margin-bottom: 5px; }
+        .gauge-value { position: absolute; bottom: 0px; width: 100%; text-align: center; line-height: 1; z-index: 10; }
+        
+        /* Animación de entrada para tabs */
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
 
 <div id="root"></div>
 
@@ -39,115 +62,301 @@
     const { useState, useEffect, useMemo } = React;
     const { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, LabelList } = Recharts;
 
-    // ---------------------------------------------------------
-    // 🔧 CONFIGURACIÓN
-    // ---------------------------------------------------------
-    const SPREADSHEET_ID = '1Ylk3tn1yQcdnDHFrskYvxdJYrKP_PoxtHulu4jMl8uA';
-    const TAB_1 = 'Data Pestañas';      
-    const TAB_2 = 'Campañas MX 2025';   
-    
-    const COLUMNA_COSTO = 'COSTO'; 
-    const COLUMNA_VENDEDOR = 'VENDEDOR'; 
-    const COLUMNA_MES = 'MES';
-    const COLUMNA_UDN = 'UDN';
-    const COLUMNA_CONTENIDO = 'CONTENIDO';
-    const COLUMNA_CLIENTE = 'CLIENTE';
+    // =========================================================
+    // DATA STATIC (Tab 1) - Convertida a JSON
+    // =========================================================
+    const DATA_STRATEGY_BARS = [
+        { name: "Unilever", val: 27, color: "#16a34a" },
+        { name: "P. Morris", val: 19, color: "#16a34a", opacity: 0.9 },
+        { name: "DiDi", val: 14, color: "#2563eb" },
+        { name: "Nissan", val: 13, color: "#2563eb" },
+        { name: "Coppel", val: 12, color: "#2563eb" },
+        { name: "Nestlé", val: 11, color: "#2563eb" },
+        { name: "BBVA", val: 9, color: "#2563eb", opacity: 0.9 },
+        { name: "Santander", val: 9, color: "#2563eb", opacity: 0.9 },
+        { name: "Amazon", val: 8, color: "#2563eb", opacity: 0.8 },
+        { name: "Coca-Cola", val: 8, color: "#2563eb", opacity: 0.8 },
+        { name: "Honda", val: 7, color: "#2563eb", opacity: 0.8 },
+        { name: "Toyota", val: 7, color: "#2563eb", opacity: 0.8 },
+        { name: "Heineken", val: 6, color: "#d97706" },
+        { name: "Uber Eats", val: 6, color: "#d97706" },
+        { name: "Liverpool", val: 5, color: "#d97706" },
+        { name: "Palacio", val: 5, color: "#d97706" },
+        { name: "Mercado Libre", val: 4, color: "#d97706" },
+        { name: "Telcel", val: 4, color: "#d97706" },
+        { name: "SEMAR", val: 3, color: "#dc2626" },
+        { name: "Gob. CDMX", val: 3, color: "#dc2626" },
+        { name: "Disney", val: 2, color: "#dc2626", opacity: 0.8 },
+        { name: "Sony Music", val: 2, color: "#dc2626", opacity: 0.8 },
+    ];
 
-    // 🎨 PALETA DE COLORES "RED EXECUTIVE" UNIFICADA
-    const COLORS = {
-        primary: '#be123c',   // Rose 700 
-        secondary: '#fb7185', // Rose 400 
-        accent: '#9f1239',    // Rose 800 
-        inactive: '#e2e8f0',  // Slate 200 
-        
-        gaugeRed: '#ef4444',
-        gaugeYellow: '#f59e0b',
-        gaugeGreen: '#10b981'
-    };
+    const DATA_MATRIX = [
+        { id: 1, client: "Unilever", ind: "Consumo Masivo", trend: "Creciente ↑", trendClass: "text-green-600 font-bold", prob: "98%", badgeClass: "bg-green-100 text-green-700" },
+        { id: 2, client: "Philip Morris", ind: "Consumo Masivo", trend: "Estable →", trendClass: "text-blue-600 font-bold", prob: "95%", badgeClass: "bg-green-100 text-green-700" },
+        { id: 3, client: "Nissan", ind: "Automotriz", trend: "Estable →", trendClass: "text-blue-600 font-bold", prob: "92%", badgeClass: "bg-green-100 text-green-700" },
+        { id: 4, client: "Coppel", ind: "Retail", trend: "Creciente ↑", trendClass: "text-green-600 font-bold", prob: "90%", badgeClass: "bg-green-100 text-green-700" },
+        { id: 5, client: "Nestlé", ind: "Consumo Masivo", trend: "Estable →", trendClass: "text-blue-600 font-bold", prob: "88%", badgeClass: "bg-green-100 text-green-700" },
+        { id: 6, client: "DiDi", ind: "Tecnología", trend: "Variable ↝", trendClass: "text-amber-600 font-bold", prob: "85%", badgeClass: "bg-blue-100 text-blue-700" },
+        { id: 7, client: "Amazon", ind: "E-Commerce", trend: "Recurrente ↻", trendClass: "text-blue-600 font-bold", prob: "82%", badgeClass: "bg-blue-100 text-blue-700" },
+        { id: 8, client: "Coca-Cola", ind: "Bebidas", trend: "Recurrente ↻", trendClass: "text-blue-600 font-bold", prob: "80%", badgeClass: "bg-blue-100 text-blue-700" },
+        { id: 9, client: "BBVA", ind: "Banca", trend: "Recurrente ↻", trendClass: "text-blue-600 font-bold", prob: "78%", badgeClass: "bg-blue-100 text-blue-700" },
+        { id: 10, client: "Santander", ind: "Banca", trend: "Recurrente ↻", trendClass: "text-blue-600 font-bold", prob: "78%", badgeClass: "bg-blue-100 text-blue-700" },
+        { id: 11, client: "Honda", ind: "Automotriz", trend: "Recurrente ↻", trendClass: "text-blue-600 font-bold", prob: "75%", badgeClass: "bg-blue-100 text-blue-700" },
+        { id: 12, client: "Heineken", ind: "Bebidas", trend: "Variable ↝", trendClass: "text-amber-600 font-bold", prob: "70%", badgeClass: "bg-amber-100 text-amber-800" },
+        { id: 13, client: "Uber Eats", ind: "Tecnología", trend: "Variable ↝", trendClass: "text-amber-600 font-bold", prob: "68%", badgeClass: "bg-amber-100 text-amber-800" },
+        { id: 14, client: "Liverpool", ind: "Retail", trend: "Recurrente ↻", trendClass: "text-blue-600 font-bold", prob: "65%", badgeClass: "bg-amber-100 text-amber-800" },
+        { id: 15, client: "Mercado Libre", ind: "E-Commerce", trend: "Variable ↝", trendClass: "text-amber-600 font-bold", prob: "60%", badgeClass: "bg-amber-100 text-amber-800" },
+        { id: 16, client: "Telcel", ind: "Telecom", trend: "Variable ↝", trendClass: "text-amber-600 font-bold", prob: "58%", badgeClass: "bg-amber-100 text-amber-800" },
+        { id: 17, client: "Bimbo", ind: "Alimentos", trend: "Variable ↝", trendClass: "text-amber-600 font-bold", prob: "55%", badgeClass: "bg-amber-100 text-amber-800" },
+        { id: 18, client: "SEMAR", ind: "Gobierno", trend: "Esporádico ⚡", trendClass: "text-red-600 font-bold", prob: "45%", badgeClass: "bg-red-100 text-red-700" },
+        { id: 19, client: "Gobierno CDMX", ind: "Gobierno", trend: "Esporádico ⚡", trendClass: "text-red-600 font-bold", prob: "40%", badgeClass: "bg-red-100 text-red-700" },
+        { id: 20, client: "Disney", ind: "Entretenimiento", trend: "Inactivo 🔻", trendClass: "text-red-600 font-bold", prob: "35%", badgeClass: "bg-red-100 text-red-700" },
+        { id: 21, client: "Sony Music", ind: "Entretenimiento", trend: "Inactivo 🔻", trendClass: "text-red-600 font-bold", prob: "30%", badgeClass: "bg-red-100 text-red-700" },
+        { id: 22, client: "Volaris", ind: "Aerolínea", trend: "Inactivo 🔻", trendClass: "text-red-600 font-bold", prob: "30%", badgeClass: "bg-red-100 text-red-700" },
+        { id: 23, client: "Tik Tok", ind: "Tecnología", trend: "Esporádico ⚡", trendClass: "text-red-600 font-bold", prob: "25%", badgeClass: "bg-red-100 text-red-700" },
+        { id: 24, client: "Bachoco", ind: "Alimentos", trend: "Inactivo 🔻", trendClass: "text-red-600 font-bold", prob: "20%", badgeClass: "bg-red-100 text-red-700" },
+        { id: 25, client: "Otros (Long Tail)", ind: "Varios", trend: "Esporádico ⚡", trendClass: "text-red-600 font-bold", prob: "<10%", badgeClass: "bg-red-100 text-red-700" },
+    ];
 
-    const COLUMNAS_TABLA = ['MES', 'VENDEDOR', 'CLIENTE', 'NOMBRE DE LA CAMPANA', 'ESTATUS', 'COSTO', 'FECHA INICIO', 'FECHA FIN', 'DIAS'];
-
-    const METAS_DETALLADAS = {
-        "ANGELA RAMIREZ": [332010, 422220, 576600, 581064, 761484, 796080, 634260, 662160, 736560, 736560, 585900, 783060],
-        "CLAUDIA RAMIREZ": [353430, 449460, 613800, 695242, 810612, 847440, 813674, 843374, 922574, 911933, 751553, 961433],
-        "MARIANA GONZALEZ": [310590, 394980, 539400, 653321, 822101, 854465, 778490, 804590, 874190, 859634, 843231, 849231],
-        "MITZI VERA": [235620, 299640, 409200, 482521, 610561, 635113, 583939, 603739, 656539, 723449, 616529, 756449],
-        "ERIK FINKENTHAL": [300000, 204000, 366937, 418140, 476200, 403328, 437272, 347292, 437576, 0, 0, 0], 
-        "ZINNIA SANCHEZ": [400000, 414000, 418000, 805000, 845000, 754220, 734639, 693222, 711069, 320000, 430000, 450000],
-        "CLAUDIA SALDANA": [272420, 263110, 266000, 555146, 420779, 445000, 437272, 347292, 437576, 370000, 390000, 550000],
-        "NADIA": [0, 0, 0, 272420, 263110, 266000, 594423, 607242, 484614, 0, 0, 0], 
-        "HORACIO": [300000, 550000, 600000, 650000, 700000, 700000, 800000, 800000, 800000, 700000, 700000, 700000]
-    };
-
-    const getMesIndex = (nombreMes) => {
-        if (!nombreMes) return -1;
-        const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
-        return meses.indexOf(nombreMes.toLowerCase().trim());
-    };
-
-    const formatMoneyShort = (value) => {
-        if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-        if (value >= 1000) return `$${(value / 1000).toFixed(0)}k`;
-        return value;
-    };
-
-    const formatMoney = (amount) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(amount);
-    const formatPercent = (val) => val.toFixed(1) + '%';
-
-    // --- COMPONENTES ---
-
-    const KpiCard = ({ title, value, icon, subtext = "" }) => (
-        <div className="card-pro p-6 flex flex-col justify-between h-full relative overflow-hidden border-l-4 border-rose-600">
-            <div className="flex justify-between items-start mb-4">
-                <div>
-                    <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">{title}</p>
-                    <h3 className="text-2xl font-bold text-slate-800 tracking-tight">{value}</h3>
-                </div>
-                <div className="p-2 rounded-full bg-rose-50 text-rose-600">
-                    {icon}
-                </div>
-            </div>
-            {subtext && <div className="text-xs text-slate-400 font-medium border-t border-slate-100 pt-2 mt-auto">{subtext}</div>}
-        </div>
-    );
-
-    const GaugeChart = ({ nombre, vendido, meta, filtrosMes }) => {
-        const porcentaje = meta > 0 ? (vendido / meta) * 100 : 0;
-        const visualValue = Math.min(porcentaje, 100);
-        
-        let color = COLORS.gaugeRed; 
-        if (porcentaje >= 50) color = COLORS.gaugeYellow; 
-        if (porcentaje >= 90) color = COLORS.gaugeGreen; 
-        
-        const data = [{ name: 'Progress', value: visualValue }, { name: 'Remaining', value: 100 - visualValue }];
-        const labelMeta = filtrosMes && filtrosMes.length > 0 ? `META (${filtrosMes.length} MESES)` : 'META ANUAL';
-
+    // =========================================================
+    // PESTAÑA 1: REPORTE INTEGRAL CLIENTES 2026
+    // (Reconstruido en React/Tailwind manteniendo diseño original)
+    // =========================================================
+    const TabStrategy = () => {
         return (
-            <div className="card-pro p-6 flex flex-col items-center relative">
-                <div className="w-full flex justify-between items-center mb-1 border-b border-slate-100 pb-2">
-                    <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider truncate mr-2" title={nombre}>{nombre}</h4>
-                    {porcentaje >= 100 && <span className="bg-emerald-100 text-emerald-800 text-[9px] px-2 py-0.5 rounded-full font-bold tracking-wide">CUMPLIDO</span>}
+            <div className="fade-in max-w-[1200px] mx-auto pt-6 px-4">
+                {/* Header Estilo Original */}
+                <header className="bg-white border-b border-slate-200 py-8 mb-8 rounded-lg shadow-sm px-6">
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Informe <strong>Recompra 2026</strong></h1>
+                            <div className="text-slate-500 text-sm mt-1">Estrategia de Fidelización y Proyección de Ventas</div>
+                        </div>
+                        <div className="text-right">
+                            <div className="bg-slate-100 text-slate-500 px-3 py-1.5 rounded-md text-xs font-bold inline-block">CONFIDENCIAL</div>
+                            <div className="text-xs opacity-80 mt-1 text-slate-500">Cierre 2025</div>
+                        </div>
+                    </div>
+                </header>
+
+                {/* KPI Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center">
+                        <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Cliente Top #1</span>
+                        <span className="block text-4xl font-extrabold text-slate-900 leading-none">Unilever</span>
+                        <span className="inline-block mt-2 text-xs font-bold bg-green-100 text-green-700 px-2 py-1 rounded-full">▲ Outlier Positivo</span>
+                    </div>
+                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center">
+                        <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Total Transacciones</span>
+                        <span className="block text-4xl font-extrabold text-slate-900 leading-none">145+</span>
+                        <span className="block mt-2 text-xs font-medium text-slate-500">Periodo 2018-2025</span>
+                    </div>
+                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center">
+                        <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Concentración (Pareto)</span>
+                        <span className="block text-4xl font-extrabold text-slate-900 leading-none">15%</span>
+                        <span className="block mt-2 text-xs font-medium text-slate-500">Genera el 80% del valor</span>
+                    </div>
                 </div>
-                <div className="gauge-container mt-2">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                            <Pie data={data} cx="50%" cy="100%" startAngle={180} endAngle={0} innerRadius="78%" outerRadius="100%" paddingAngle={0} dataKey="value" stroke="none">
-                                <Cell fill={color} />
-                                <Cell fill="#f1f5f9" />
-                            </Pie>
-                        </PieChart>
-                    </ResponsiveContainer>
-                    <div className="gauge-value"><span className="text-xl font-bold tracking-tight" style={{color: color}}>{porcentaje.toFixed(1)}%</span></div>
+
+                {/* Sección Gráficas */}
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-8">
+                    <h2 className="text-xl font-bold text-slate-900 mb-6 border-b border-slate-200 pb-4">Resumen Visual de Cartera</h2>
+                    
+                    <div className="grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-10 items-start">
+                        {/* Barras con Scroll */}
+                        <div>
+                            <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider text-center mb-5">Frecuencia de Compra (Ranking Completo)</h3>
+                            <div className="custom-scroll overflow-y-auto max-h-[350px] pr-3">
+                                <div className="w-full">
+                                    {DATA_STRATEGY_BARS.map((item, idx) => (
+                                        <div key={idx} className="flex items-center mb-3">
+                                            <div className="w-[110px] text-xs font-bold text-right pr-4 text-slate-700 whitespace-nowrap overflow-hidden text-ellipsis flex-shrink-0">
+                                                {item.name}
+                                            </div>
+                                            <div className="flex-grow bg-slate-100 rounded-md h-[18px] overflow-hidden">
+                                                <div 
+                                                    className="h-full rounded-md" 
+                                                    style={{ 
+                                                        width: `${(item.val / 30) * 100}%`, 
+                                                        backgroundColor: item.color,
+                                                        opacity: item.opacity || 1
+                                                    }}
+                                                >
+                                                    <span className="float-right text-white text-[11px] font-bold leading-[18px] pr-2">{item.val}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Dona SVG (Exactamente como el original) */}
+                        <div className="flex flex-col items-center sticky top-5">
+                            <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider text-center mb-5">Nivel de Fidelización</h3>
+                            
+                            <svg className="overflow-visible max-w-full h-auto" width="280" height="280" viewBox="0 0 40 40">
+                                <circle cx="20" cy="20" r="15.9155" fill="none" stroke="#f1f5f9" strokeWidth="8"></circle>
+                                
+                                {/* Segmentos */}
+                                <circle cx="20" cy="20" r="15.9155" fill="none" stroke="#16a34a" strokeWidth="8" strokeDasharray="15 85" strokeDashoffset="25"></circle>
+                                <text x="27.2" y="5.8" className="text-[3px] font-bold fill-white txt-shadow font-sans text-center" textAnchor="middle" dominantBaseline="middle">15%</text>
+
+                                <circle cx="20" cy="20" r="15.9155" fill="none" stroke="#2563eb" strokeWidth="8" strokeDasharray="25 75" strokeDashoffset="10"></circle>
+                                <text x="35.6" y="22.5" className="text-[3px] font-bold fill-white txt-shadow font-sans text-center" textAnchor="middle" dominantBaseline="middle">25%</text>
+
+                                <circle cx="20" cy="20" r="15.9155" fill="none" stroke="#d97706" strokeWidth="8" strokeDasharray="40 60" strokeDashoffset="-15"></circle>
+                                <text x="10.5" y="32.8" className="text-[3px] font-bold fill-white txt-shadow font-sans text-center" textAnchor="middle" dominantBaseline="middle">40%</text>
+
+                                <circle cx="20" cy="20" r="15.9155" fill="none" stroke="#dc2626" strokeWidth="8" strokeDasharray="20 80" strokeDashoffset="-55"></circle>
+                                <text x="7.2" y="10.5" className="text-[3px] font-bold fill-white txt-shadow font-sans text-center" textAnchor="middle" dominantBaseline="middle">20%</text>
+                            </svg>
+
+                            <div className="grid grid-cols-2 gap-3 w-full mt-6 text-xs">
+                                <div className="flex items-center font-medium text-slate-700"><div className="w-2.5 h-2.5 mr-2 rounded-full bg-[#16a34a]"></div> Muy Alta (Socios)</div>
+                                <div className="flex items-center font-medium text-slate-700"><div className="w-2.5 h-2.5 mr-2 rounded-full bg-[#2563eb]"></div> Alta (Recurrentes)</div>
+                                <div className="flex items-center font-medium text-slate-700"><div className="w-2.5 h-2.5 mr-2 rounded-full bg-[#d97706]"></div> Media (Oportunidad)</div>
+                                <div className="flex items-center font-medium text-slate-700"><div className="w-2.5 h-2.5 mr-2 rounded-full bg-[#dc2626]"></div> Baja/Riesgo</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div className="w-full mt-2 pt-2 grid grid-cols-2 gap-2 text-[10px]">
-                    <div><p className="text-slate-400 font-bold uppercase">Vendido</p><p className="font-semibold text-slate-700 text-xs">{formatMoney(vendido)}</p></div>
-                    <div className="text-right"><p className="text-slate-400 font-bold uppercase">{labelMeta}</p><p className="font-semibold text-slate-700 text-xs">{formatMoney(meta)}</p></div>
+
+                {/* Tabla Matriz */}
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-8">
+                    <h2 className="text-xl font-bold text-slate-900 mb-6 border-b border-slate-200 pb-4">Matriz de Proyección 2026</h2>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm border-separate border-spacing-0">
+                            <thead>
+                                <tr>
+                                    {['#', 'Cliente', 'Industria', 'Tendencia', 'Probabilidad'].map(h => (
+                                        <th key={h} className="text-left px-4 py-3 bg-slate-50 text-slate-500 font-bold uppercase text-xs tracking-wider border-b border-slate-200 sticky top-0 z-10">{h}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {DATA_MATRIX.map(row => (
+                                    <tr key={row.id} className="hover:bg-slate-50">
+                                        <td className="px-4 py-3 border-b border-slate-200">{row.id}</td>
+                                        <td className="px-4 py-3 border-b border-slate-200 font-bold">{row.client}</td>
+                                        <td className="px-4 py-3 border-b border-slate-200">{row.ind}</td>
+                                        <td className="px-4 py-3 border-b border-slate-200"><span className={row.trendClass}>{row.trend}</span></td>
+                                        <td className="px-4 py-3 border-b border-slate-200">
+                                            <span className={`px-2.5 py-1 rounded-full text-xs font-bold inline-block min-w-[50px] text-center ${row.badgeClass}`}>{row.prob}</span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div className="text-center py-10 text-slate-500 text-xs border-t border-slate-200 mt-10">
+                    &copy; 2026 Reporte Confidencial - Uso Interno Exclusivo
                 </div>
             </div>
         );
     };
 
-    const Dashboard = () => {
+    // =========================================================
+    // PESTAÑA 2: DASHBOARD VENTAS 2025 (React Original)
+    // =========================================================
+    const TabSales = () => {
+        // --- CONFIGURACIÓN ---
+        const SPREADSHEET_ID = '1Ylk3tn1yQcdnDHFrskYvxdJYrKP_PoxtHulu4jMl8uA';
+        const TAB_1 = 'Data Pestañas';      
+        const TAB_2 = 'Campañas MX 2025';   
+        
+        const COLUMNA_COSTO = 'COSTO'; 
+        const COLUMNA_VENDEDOR = 'VENDEDOR'; 
+        const COLUMNA_MES = 'MES';
+        const COLUMNA_UDN = 'UDN';
+        const COLUMNA_CONTENIDO = 'CONTENIDO';
+        const COLUMNA_CLIENTE = 'CLIENTE';
+
+        const COLORS = {
+            primary: '#be123c', secondary: '#fb7185', accent: '#9f1239', inactive: '#e2e8f0',
+            gaugeRed: '#ef4444', gaugeYellow: '#f59e0b', gaugeGreen: '#10b981'
+        };
+
+        const COLUMNAS_TABLA = ['MES', 'VENDEDOR', 'CLIENTE', 'NOMBRE DE LA CAMPANA', 'ESTATUS', 'COSTO', 'FECHA INICIO', 'FECHA FIN', 'DIAS'];
+        const METAS_DETALLADAS = {
+            "ANGELA RAMIREZ": [332010, 422220, 576600, 581064, 761484, 796080, 634260, 662160, 736560, 736560, 585900, 783060],
+            "CLAUDIA RAMIREZ": [353430, 449460, 613800, 695242, 810612, 847440, 813674, 843374, 922574, 911933, 751553, 961433],
+            "MARIANA GONZALEZ": [310590, 394980, 539400, 653321, 822101, 854465, 778490, 804590, 874190, 859634, 843231, 849231],
+            "MITZI VERA": [235620, 299640, 409200, 482521, 610561, 635113, 583939, 603739, 656539, 723449, 616529, 756449],
+            "ERIK FINKENTHAL": [300000, 204000, 366937, 418140, 476200, 403328, 437272, 347292, 437576, 0, 0, 0], 
+            "ZINNIA SANCHEZ": [400000, 414000, 418000, 805000, 845000, 754220, 734639, 693222, 711069, 320000, 430000, 450000],
+            "CLAUDIA SALDANA": [272420, 263110, 266000, 555146, 420779, 445000, 437272, 347292, 437576, 370000, 390000, 550000],
+            "NADIA": [0, 0, 0, 272420, 263110, 266000, 594423, 607242, 484614, 0, 0, 0], 
+            "HORACIO": [300000, 550000, 600000, 650000, 700000, 700000, 800000, 800000, 800000, 700000, 700000, 700000]
+        };
+
+        const getMesIndex = (nombreMes) => {
+            if (!nombreMes) return -1;
+            const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+            return meses.indexOf(nombreMes.toLowerCase().trim());
+        };
+
+        const formatMoneyShort = (value) => {
+            if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
+            if (value >= 1000) return `$${(value / 1000).toFixed(0)}k`;
+            return value;
+        };
+
+        const formatMoney = (amount) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(amount);
+        const formatPercent = (val) => val.toFixed(1) + '%';
+
+        // Componentes Internos
+        const KpiCard = ({ title, value, icon, subtext = "" }) => (
+            <div className="card-pro p-6 flex flex-col justify-between h-full relative overflow-hidden border-l-4 border-rose-600">
+                <div className="flex justify-between items-start mb-4">
+                    <div>
+                        <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">{title}</p>
+                        <h3 className="text-2xl font-bold text-slate-800 tracking-tight">{value}</h3>
+                    </div>
+                    <div className="p-2 rounded-full bg-rose-50 text-rose-600">{icon}</div>
+                </div>
+                {subtext && <div className="text-xs text-slate-400 font-medium border-t border-slate-100 pt-2 mt-auto">{subtext}</div>}
+            </div>
+        );
+
+        const GaugeChart = ({ nombre, vendido, meta, filtrosMes }) => {
+            const porcentaje = meta > 0 ? (vendido / meta) * 100 : 0;
+            const visualValue = Math.min(porcentaje, 100);
+            
+            let color = COLORS.gaugeRed; 
+            if (porcentaje >= 50) color = COLORS.gaugeYellow; 
+            if (porcentaje >= 90) color = COLORS.gaugeGreen; 
+            
+            const data = [{ name: 'Progress', value: visualValue }, { name: 'Remaining', value: 100 - visualValue }];
+            const labelMeta = filtrosMes && filtrosMes.length > 0 ? `META (${filtrosMes.length} MESES)` : 'META ANUAL';
+
+            return (
+                <div className="card-pro p-6 flex flex-col items-center relative">
+                    <div className="w-full flex justify-between items-center mb-1 border-b border-slate-100 pb-2">
+                        <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider truncate mr-2" title={nombre}>{nombre}</h4>
+                        {porcentaje >= 100 && <span className="bg-emerald-100 text-emerald-800 text-[9px] px-2 py-0.5 rounded-full font-bold tracking-wide">CUMPLIDO</span>}
+                    </div>
+                    <div className="gauge-container mt-2">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie data={data} cx="50%" cy="100%" startAngle={180} endAngle={0} innerRadius="78%" outerRadius="100%" paddingAngle={0} dataKey="value" stroke="none">
+                                    <Cell fill={color} />
+                                    <Cell fill="#f1f5f9" />
+                                </Pie>
+                            </PieChart>
+                        </ResponsiveContainer>
+                        <div className="gauge-value"><span className="text-xl font-bold tracking-tight" style={{color: color}}>{porcentaje.toFixed(1)}%</span></div>
+                    </div>
+                    <div className="w-full mt-2 pt-2 grid grid-cols-2 gap-2 text-[10px]">
+                        <div><p className="text-slate-400 font-bold uppercase">Vendido</p><p className="font-semibold text-slate-700 text-xs">{formatMoney(vendido)}</p></div>
+                        <div className="text-right"><p className="text-slate-400 font-bold uppercase">{labelMeta}</p><p className="font-semibold text-slate-700 text-xs">{formatMoney(meta)}</p></div>
+                    </div>
+                </div>
+            );
+        };
+
         const [rawData1, setRawData1] = useState([]); 
         const [rawData2, setRawData2] = useState([]); 
         
@@ -370,10 +579,10 @@
                 const metasArray = METAS_DETALLADAS[nombreMeta];
                 let metaTotal = 0;
                 if (filtrosMes.length > 0) {
-                     filtrosMes.forEach(mesNombre => {
-                         const idx = getMesIndex(mesNombre);
-                         if (idx !== -1) metaTotal += metasArray[idx];
-                     });
+                      filtrosMes.forEach(mesNombre => {
+                          const idx = getMesIndex(mesNombre);
+                          if (idx !== -1) metaTotal += metasArray[idx];
+                      });
                 } else {
                     metaTotal = metasArray.reduce((a, b) => a + b, 0);
                 }
@@ -395,7 +604,7 @@
         if (loading) return <div className="h-screen flex flex-col items-center justify-center bg-slate-50"><div className="spinner mb-4"></div><p className="text-slate-500 font-medium animate-pulse text-sm">Sincronizando datos...</p></div>;
         if (error) return <div className="h-screen flex items-center justify-center text-red-600 font-bold">{error}</div>;
 
-        // Iconos
+        // Iconos SVG
         const IconCheck = <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>;
         const IconFile = <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>;
         const IconMoney = <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>;
@@ -404,12 +613,12 @@
         const IconSearch = <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>;
 
         return (
-            <div className="p-6 md:p-12 max-w-[1600px] mx-auto min-h-screen">
+            <div className="fade-in p-6 md:p-12 max-w-[1600px] mx-auto min-h-screen">
                 
                 {/* HEADER */}
                 <header className="mb-10 pb-6 flex flex-col md:flex-row justify-between items-end border-b border-slate-200 bg-white p-6 -mx-6 md:-mx-12 -mt-6 md:-mt-12 sticky top-0 z-50 shadow-sm">
                     <div>
-                        <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Dashboard Ejecutivo 2025</h1>
+                        <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Dashboard Control Ventas 2025</h1>
                         <p className="text-slate-500 mt-1 text-sm font-medium">Control Financiero y Comercial</p>
                     </div>
                     <div className="text-right flex flex-col items-end gap-2 mt-4 md:mt-0">
@@ -671,6 +880,66 @@
         );
     };
 
+    // ==========================================
+    // APP PRINCIPAL (CONTENEDOR DE PESTAÑAS)
+    // ==========================================
+    const App = () => {
+        const [activeTab, setActiveTab] = useState('strategy'); // 'strategy' | 'sales'
+
+        return (
+            <div className="min-h-screen bg-slate-50 pb-20">
+                
+                {/* Navegación Superior Estilo Tabs */}
+                <div className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex justify-between h-16">
+                            <div className="flex">
+                                <div className="flex-shrink-0 flex items-center mr-8">
+                                    <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white font-bold text-xl mr-2">I</div>
+                                    <span className="font-bold text-slate-800 text-lg tracking-tight">Ivan<span className="text-slate-400">Producciones</span></span>
+                                </div>
+                                <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+                                    <button 
+                                        onClick={() => setActiveTab('strategy')}
+                                        className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200 ${
+                                            activeTab === 'strategy' 
+                                            ? 'border-emerald-500 text-slate-900' 
+                                            : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                                        }`}
+                                    >
+                                        Análisis de Recompra para 2026
+                                    </button>
+                                    <button 
+                                        onClick={() => setActiveTab('sales')}
+                                        className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200 ${
+                                            activeTab === 'sales' 
+                                            ? 'border-rose-500 text-slate-900' 
+                                            : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                                        }`}
+                                    >
+                                        Dashboard Ventas 2025
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="flex items-center">
+                                <span className="text-xs text-slate-400 font-medium bg-slate-100 px-3 py-1 rounded-full">{new Date().toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Contenido Dinámico */}
+                <main className="w-full">
+                    {activeTab === 'strategy' ? <TabStrategy /> : <TabSales />}
+                </main>
+
+            </div>
+        );
+    };
+
     const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<Dashboard />);
+    root.render(<App />);
 </script>
+
+</body>
+</html>
