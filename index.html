@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TRIBU 2026</title>
+    <title>Suite Integral de Reportes 2026</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -20,11 +20,11 @@
         
         body { background-color: #f8fafc; font-family: 'Inter', sans-serif; color: #334155; }
         
-        /* Spinner rojo (del código original) */
+        /* Spinner rojo */
         .spinner { width: 40px; height: 40px; border: 3px solid #e2e8f0; border-top-color: #e11d48; border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Estilos específicos Tab 1 (Estrategia) para igualar tu HTML original */
+        /* Estilos específicos Tab 1 (Estrategia) */
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -32,7 +32,7 @@
         
         .txt-shadow { filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1)); }
 
-        /* Estilos Tab 2 (Ventas) originales */
+        /* Estilos Tab 2 (Ventas) */
         .card-pro { 
             background-color: white; 
             border: 1px solid #e2e8f0; 
@@ -49,7 +49,6 @@
         .gauge-container { position: relative; width: 100%; height: 100px; display: flex; justify-content: center; overflow: hidden; margin-bottom: 5px; }
         .gauge-value { position: absolute; bottom: 0px; width: 100%; text-align: center; line-height: 1; z-index: 10; }
         
-        /* Animación de entrada para tabs */
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
@@ -63,7 +62,7 @@
     const { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, LabelList } = Recharts;
 
     // =========================================================
-    // DATA STATIC (Tab 1) - Convertida a JSON
+    // DATA STATIC (Tab Estrategia)
     // =========================================================
     const DATA_STRATEGY_BARS = [
         { name: "Unilever", val: 27, color: "#16a34a" },
@@ -119,13 +118,12 @@
     ];
 
     // =========================================================
-    // PESTAÑA 1: REPORTE INTEGRAL CLIENTES 2026
-    // (Reconstruido en React/Tailwind manteniendo diseño original)
+    // PESTAÑA ESTRATEGIA
     // =========================================================
     const TabStrategy = () => {
         return (
             <div className="fade-in max-w-[1200px] mx-auto pt-6 px-4">
-                {/* Header Estilo Original */}
+                {/* Header */}
                 <header className="bg-white border-b border-slate-200 py-8 mb-8 rounded-lg shadow-sm px-6">
                     <div className="flex justify-between items-center">
                         <div>
@@ -133,7 +131,7 @@
                             <div className="text-slate-500 text-sm mt-1">Estrategia de Fidelización y Proyección de Ventas</div>
                         </div>
                         <div className="text-right">
-                            <div className="bg-slate-100 text-slate-500 px-3 py-1.5 rounded-md text-xs font-bold inline-block">ÚLTIMA ACTUALIZACIÓN</div>
+                            <div className="bg-slate-100 text-slate-500 px-3 py-1.5 rounded-md text-xs font-bold inline-block">Última Actualización</div>
                             <div className="text-xs opacity-80 mt-1 text-slate-500">Cierre 2025</div>
                         </div>
                     </div>
@@ -191,14 +189,13 @@
                             </div>
                         </div>
 
-                        {/* Dona SVG (Exactamente como el original) */}
+                        {/* Dona SVG */}
                         <div className="flex flex-col items-center sticky top-5">
                             <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider text-center mb-5">Nivel de Fidelización</h3>
                             
                             <svg className="overflow-visible max-w-full h-auto" width="280" height="280" viewBox="0 0 40 40">
                                 <circle cx="20" cy="20" r="15.9155" fill="none" stroke="#f1f5f9" strokeWidth="8"></circle>
                                 
-                                {/* Segmentos */}
                                 <circle cx="20" cy="20" r="15.9155" fill="none" stroke="#16a34a" strokeWidth="8" strokeDasharray="15 85" strokeDashoffset="25"></circle>
                                 <text x="27.2" y="5.8" className="text-[3px] font-bold fill-white txt-shadow font-sans text-center" textAnchor="middle" dominantBaseline="middle">15%</text>
 
@@ -224,7 +221,7 @@
 
                 {/* Tabla Matriz */}
                 <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-8">
-                    <h2 className="text-xl font-bold text-slate-900 mb-6 border-b border-slate-200 pb-4">Matriz de Proyección 2026</h2>
+                    <h2 className="text-xl font-bold text-slate-900 mb-6 border-b border-slate-200 pb-4">Matriz de Probabilidad de Compra en 2026</h2>
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm border-separate border-spacing-0">
                             <thead>
@@ -259,10 +256,10 @@
     };
 
     // =========================================================
-    // PESTAÑA 2: DASHBOARD VENTAS 2025 (React Original)
+    // PESTAÑA VENTAS (Original)
     // =========================================================
     const TabSales = () => {
-        // --- CONFIGURACIÓN ---
+        // CONFIGURACIÓN
         const SPREADSHEET_ID = '1Ylk3tn1yQcdnDHFrskYvxdJYrKP_PoxtHulu4jMl8uA';
         const TAB_1 = 'Data Pestañas';      
         const TAB_2 = 'Campañas MX 2025';   
@@ -307,7 +304,6 @@
         const formatMoney = (amount) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(amount);
         const formatPercent = (val) => val.toFixed(1) + '%';
 
-        // Componentes Internos
         const KpiCard = ({ title, value, icon, subtext = "" }) => (
             <div className="card-pro p-6 flex flex-col justify-between h-full relative overflow-hidden border-l-4 border-rose-600">
                 <div className="flex justify-between items-start mb-4">
@@ -360,12 +356,10 @@
         const [rawData1, setRawData1] = useState([]); 
         const [rawData2, setRawData2] = useState([]); 
         
-        // FILTROS
         const [filtrosVendedor, setFiltrosVendedor] = useState([]); 
         const [filtrosMes, setFiltrosMes] = useState([]); 
         const [filtrosUDN, setFiltrosUDN] = useState([]); 
         
-        // BÚSQUEDA Y PAGINACIÓN
         const [busquedaCliente, setBusquedaCliente] = useState('');
         const [paginaActual, setPaginaActual] = useState(1);
         const registrosPorPagina = 20;
@@ -396,7 +390,7 @@
 
         const toggleFiltro = (setFunction, valor) => {
             setFunction(prev => prev.includes(valor) ? prev.filter(item => item !== valor) : [...prev, valor]);
-            setPaginaActual(1); // Reset página al filtrar
+            setPaginaActual(1);
         };
 
         const limpiarFiltros = () => {
@@ -407,7 +401,6 @@
             setPaginaActual(1);
         };
 
-        // --- FILTRADO PRINCIPAL (GRÁFICAS) ---
         const filtrarDatosGlobales = (datos) => {
             return datos.filter(row => {
                 const passVendedor = filtrosVendedor.length === 0 || filtrosVendedor.includes(row[COLUMNA_VENDEDOR]);
@@ -420,7 +413,6 @@
         const data1 = useMemo(() => filtrarDatosGlobales(rawData1), [rawData1, filtrosVendedor, filtrosMes, filtrosUDN]);
         const data2 = useMemo(() => filtrarDatosGlobales(rawData2), [rawData2, filtrosVendedor, filtrosMes, filtrosUDN]);
 
-        // --- FILTRADO SECUNDARIO (TABLA) ---
         const dataTablaFiltrada = useMemo(() => {
             if (!busquedaCliente) return data2;
             return data2.filter(row => {
@@ -429,7 +421,6 @@
             });
         }, [data2, busquedaCliente]);
 
-        // --- PAGINACIÓN ---
         const totalPaginas = Math.ceil(dataTablaFiltrada.length / registrosPorPagina);
         const dataTablaPaginada = useMemo(() => {
             const inicio = (paginaActual - 1) * registrosPorPagina;
@@ -445,7 +436,6 @@
             }
         };
 
-        // --- CÁLCULOS KPI ---
         const sumarColumna = (dataset, nombreColumna) => {
             if (!dataset || dataset.length === 0) return 0;
             return dataset.reduce((acumulado, fila) => {
@@ -463,7 +453,6 @@
         const tasaConversionQty = countPropuestas > 0 ? (countCerradas / countPropuestas) * 100 : 0;
         const tasaConversionMonto = montoPropuestas > 0 ? (montoVentas / montoPropuestas) * 100 : 0;
 
-        // --- DATOS GRÁFICAS ---
         const getBaseDataVendedores = () => rawData2.filter(row => 
             (filtrosMes.length === 0 || filtrosMes.includes(row[COLUMNA_MES])) &&
             (filtrosUDN.length === 0 || filtrosUDN.includes(row[COLUMNA_UDN]))
@@ -604,7 +593,7 @@
         if (loading) return <div className="h-screen flex flex-col items-center justify-center bg-slate-50"><div className="spinner mb-4"></div><p className="text-slate-500 font-medium animate-pulse text-sm">Sincronizando datos...</p></div>;
         if (error) return <div className="h-screen flex items-center justify-center text-red-600 font-bold">{error}</div>;
 
-        // Iconos SVG
+        // Iconos
         const IconCheck = <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>;
         const IconFile = <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>;
         const IconMoney = <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>;
@@ -618,7 +607,7 @@
                 {/* HEADER */}
                 <header className="mb-10 pb-6 flex flex-col md:flex-row justify-between items-end border-b border-slate-200 bg-white p-6 -mx-6 md:-mx-12 -mt-6 md:-mt-12 sticky top-0 z-50 shadow-sm">
                     <div>
-                        <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Dashboard Control Ventas 2025</h1>
+                        <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Dashboard Ejecutivo 2025</h1>
                         <p className="text-slate-500 mt-1 text-sm font-medium">Control Financiero y Comercial</p>
                     </div>
                     <div className="text-right flex flex-col items-end gap-2 mt-4 md:mt-0">
@@ -884,44 +873,55 @@
     // APP PRINCIPAL (CONTENEDOR DE PESTAÑAS)
     // ==========================================
     const App = () => {
-        const [activeTab, setActiveTab] = useState('strategy'); // 'strategy' | 'sales'
+        const [activeTab, setActiveTab] = useState('sales'); // 'sales' es ahora el default
 
         return (
             <div className="min-h-screen bg-slate-50 pb-20">
                 
-                {/* Navegación Superior Estilo Tabs */}
+                {/* Navegación Superior Responsive */}
                 <div className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex justify-between h-16">
-                            <div className="flex">
-                                <div className="flex-shrink-0 flex items-center mr-8">
-                                    <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white font-bold text-xl mr-2">I</div>
-                                    <span className="font-bold text-slate-800 text-lg tracking-tight">Ivan<span className="text-slate-400">Producciones</span></span>
+                        <div className="flex flex-col sm:flex-row justify-between h-auto sm:h-16 py-2 sm:py-0">
+                            <div className="flex flex-col sm:flex-row w-full sm:w-auto">
+                                {/* Logo & Date Row for Mobile */}
+                                <div className="flex justify-between items-center w-full sm:w-auto">
+                                    <div className="flex-shrink-0 flex items-center">
+                                        <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white font-bold text-xl mr-2">I</div>
+                                        <span className="font-bold text-slate-800 text-lg tracking-tight">Ivan<span className="text-slate-400">Producciones</span></span>
+                                    </div>
+                                    {/* Date visible on mobile right side */}
+                                    <div className="sm:hidden flex items-center">
+                                         <span className="text-[10px] text-slate-400 font-medium bg-slate-100 px-2 py-1 rounded-full">{new Date().toLocaleDateString()}</span>
+                                    </div>
                                 </div>
-                                <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                                    <button 
-                                        onClick={() => setActiveTab('strategy')}
-                                        className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200 ${
-                                            activeTab === 'strategy' 
-                                            ? 'border-emerald-500 text-slate-900' 
-                                            : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
-                                        }`}
-                                    >
-                                        Análisis de Recompra para 2026
-                                    </button>
-                                    <button 
+
+                                {/* Tabs - Make them visible on mobile (flex row) */}
+                                <div className="flex mt-2 sm:mt-0 sm:ml-8 w-full sm:w-auto border-t sm:border-t-0 border-slate-100 pt-1 sm:pt-0">
+                                    <button
                                         onClick={() => setActiveTab('sales')}
-                                        className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200 ${
-                                            activeTab === 'sales' 
-                                            ? 'border-rose-500 text-slate-900' 
+                                        className={`flex-1 sm:flex-none text-center py-2 sm:py-0 inline-flex items-center justify-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200 ${
+                                            activeTab === 'sales'
+                                            ? 'border-rose-500 text-slate-900 bg-rose-50 sm:bg-transparent'
                                             : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
                                         }`}
                                     >
-                                        Dashboard Ventas 2025
+                                        Dashboard Ventas
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab('strategy')}
+                                        className={`flex-1 sm:flex-none text-center py-2 sm:py-0 inline-flex items-center justify-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200 ml-2 ${
+                                            activeTab === 'strategy'
+                                            ? 'border-emerald-500 text-slate-900 bg-emerald-50 sm:bg-transparent'
+                                            : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                                        }`}
+                                    >
+                                        Análisis de Recompra
                                     </button>
                                 </div>
                             </div>
-                            <div className="flex items-center">
+                            
+                            {/* Desktop Date */}
+                            <div className="hidden sm:flex items-center">
                                 <span className="text-xs text-slate-400 font-medium bg-slate-100 px-3 py-1 rounded-full">{new Date().toLocaleDateString()}</span>
                             </div>
                         </div>
@@ -930,7 +930,7 @@
 
                 {/* Contenido Dinámico */}
                 <main className="w-full">
-                    {activeTab === 'strategy' ? <TabStrategy /> : <TabSales />}
+                    {activeTab === 'sales' ? <TabSales /> : <TabStrategy />}
                 </main>
 
             </div>
