@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tribu 2026</title>
+    <title>Tribu 2026 - Dashboard Integral</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -12,32 +12,23 @@
     
     <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
     <script src="https://unpkg.com/recharts@2.1.12/umd/Recharts.js"></script>
-    
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script> <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         
         body { background-color: #f8fafc; font-family: 'Inter', sans-serif; color: #334155; }
         
-        /* Spinner rojo */
+        /* Spinner Global */
         .spinner { width: 40px; height: 40px; border: 3px solid #e2e8f0; border-top-color: #e11d48; border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Estilos específicos Tab 1 (Estrategia) */
-        .custom-scroll::-webkit-scrollbar { width: 6px; }
-        .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
-        .txt-shadow { filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1)); }
-
-        /* Estilos Tab 2 (Ventas) */
+        /* Estilos Generales Card */
         .card-pro { 
             background-color: white; 
             border: 1px solid #e2e8f0; 
-            border-radius: 8px; 
-            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); 
+            border-radius: 12px; 
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05); 
             transition: all 0.3s ease;
         }
         .card-pro:hover { 
@@ -45,10 +36,41 @@
             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); 
             border-color: #cbd5e1;
         }
+
+        /* Scrollbars */
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Estilos Específicos Tab Estrategia */
+        .txt-shadow { filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1)); }
+
+        /* Estilos Específicos Tab Ventas */
         .clickable-chart .recharts-rectangle { cursor: pointer; }
         .gauge-container { position: relative; width: 100%; height: 100px; display: flex; justify-content: center; overflow: hidden; margin-bottom: 5px; }
         .gauge-value { position: absolute; bottom: 0px; width: 100%; text-align: center; line-height: 1; z-index: 10; }
         
+        /* Estilos Específicos Tab CXC (Badges y Riesgo) */
+        .status-badge { padding: 4px 8px; border-radius: 6px; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .st-cobrado { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .st-pendiente { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        
+        .risk-corriente { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; } 
+        .risk-bajo { background: #ecfccb; color: #4d7c0f; border: 1px solid #d9f99d; } 
+        .risk-medio { background: #fef9c3; color: #a16207; border: 1px solid #fde047; } 
+        .risk-alto { background: #ffedd5; color: #c2410c; border: 1px solid #fed7aa; } 
+        .risk-incobrable { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; } 
+        .risk-sinfecha { background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; }
+
+        th.sortable { cursor: pointer; user-select: none; transition: background 0.2s; }
+        th.sortable:hover { background-color: #f1f5f9; color: #334155; }
+
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
@@ -59,7 +81,7 @@
 
 <script type="text/babel">
     const { useState, useEffect, useMemo } = React;
-    const { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, LabelList } = Recharts;
+    const { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, LabelList, Legend } = Recharts;
 
     // =========================================================
     // DATA STATIC (Tab Estrategia)
@@ -250,6 +272,472 @@
 
                 <div className="text-center py-10 text-slate-500 text-xs border-t border-slate-200 mt-10">
                     &copy; 2026 Reporte Confidencial - Uso Interno Exclusivo
+                </div>
+            </div>
+        );
+    };
+
+    // =========================================================
+    // PESTAÑA CXC (CUENTAS POR COBRAR - INTEGRADA)
+    // =========================================================
+    const TabCXC = () => {
+        const CSV_URL_CXC = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRDisRq3SWEkwy5tZOAsCSB0rfmfQ8aCYgjdBhM7z7iKQ8BpHFpNYzLKzSRLnHVkId4vSEBj62X3TwQ/pub?output=csv';
+        
+        const COL = {
+            ANIO: 'EJERCICIO',
+            AGENCIA: 'AGENCIA O CLIENTE DIRECTO',
+            CLIENTE: 'CLIENTE O CAMPAÑA',
+            ESTATUS: 'ESTATUS',
+            MONTO_F: 'MONTO SIN IVA',
+            MONTO_L: 'TOTAL FACTURADO'
+        };
+
+        const COLORS_CXC = {
+            cobrado: '#10b981',   
+            pendiente: '#ef4444', 
+            riskMap: {
+                'Al Corriente': '#22c55e', 
+                'Bajo Riesgo': '#84cc16',  
+                'Medio Riesgo': '#eab308', 
+                'Alto Riesgo': '#f97316',  
+                'Incobrable': '#ef4444',    
+                'Sin Fecha': '#94a3b8'      
+            }
+        };
+
+        // --- FUNCIONES AUXILIARES CXC ---
+        const parseMoney = (val) => {
+            if (!val) return 0;
+            if (typeof val === 'number') return val;
+            return parseFloat(val.toString().replace(/[$,\s]/g, '')) || 0;
+        };
+
+        const parseIntSafe = (val) => {
+            if (!val) return 0;
+            const num = parseInt(val, 10);
+            return isNaN(num) ? 0 : num;
+        };
+
+        const formatMoney = (amount) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(amount);
+        const formatMoneyShort = (value) => {
+            if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
+            if (value >= 1000) return `$${(value / 1000).toFixed(0)}k`;
+            return value;
+        };
+
+        const calculateAverageWithoutOutliers = (values) => {
+            const positives = values.filter(v => v !== null && v > 0).sort((a, b) => a - b);
+            if (positives.length === 0) return { avg: 0, count: 0 };
+            if (positives.length < 4) { 
+                const sum = positives.reduce((a, b) => a + b, 0);
+                return { avg: Math.round(sum / positives.length), count: positives.length };
+            }
+            const q1 = positives[Math.floor(positives.length * 0.25)];
+            const q3 = positives[Math.floor(positives.length * 0.75)];
+            const iqr = q3 - q1;
+            const upperFence = q3 + (1.5 * iqr); 
+            const cleanValues = positives.filter(v => v <= upperFence);
+            if (cleanValues.length === 0) return { avg: 0, count: 0 };
+            const sum = cleanValues.reduce((a, b) => a + b, 0);
+            return { avg: Math.round(sum / cleanValues.length), count: cleanValues.length };
+        };
+
+        const InfoIcon = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+            </svg>
+        );
+
+        // Renombrado a CardCXC para no chocar con KpiCard de Ventas
+        const CardCXC = ({ title, value, subtext, colorClass, infoText }) => (
+            <div className={`card-pro p-6 border-l-4 ${colorClass} relative overflow-visible`}>
+                <div className="flex justify-between items-start mb-2">
+                    <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">{title}</p>
+                    {infoText && (
+                        <div className="group relative ml-2">
+                            <span className="cursor-help text-slate-400 hover:text-slate-600 transition-colors"><InfoIcon /></span>
+                            <div className="invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute right-0 top-6 w-64 p-3 bg-slate-800 text-white text-[10px] leading-relaxed rounded-lg shadow-xl z-50 pointer-events-none">
+                                <div className="absolute -top-1 right-1 w-2 h-2 bg-slate-800 rotate-45"></div>
+                                <div className="relative z-10 whitespace-pre-line font-medium">{infoText}</div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+                <h3 className="text-3xl font-bold text-slate-800 tracking-tight">{value}</h3>
+                {subtext && <p className="text-xs text-slate-400 mt-2 font-medium">{subtext}</p>}
+            </div>
+        );
+
+        const [processedData, setProcessedData] = useState([]);
+        const [loading, setLoading] = useState(true);
+        const [error, setError] = useState(null);
+
+        // Filtros y Paginación
+        const [filtroAnio, setFiltroAnio] = useState([]);
+        const [busqueda, setBusqueda] = useState('');
+        const [paginaActual, setPaginaActual] = useState(1);
+        const filasPorPagina = 50;
+
+        // Ordenamiento
+        const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
+        useEffect(() => {
+            const fetchData = () => {
+                if (!Papa) {
+                    setError("Librería PapaParse no cargada.");
+                    setLoading(false);
+                    return;
+                }
+                Papa.parse(CSV_URL_CXC, {
+                    download: true,
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: (results) => {
+                        if (results.data && results.meta && results.meta.fields) {
+                            processRawData(results.data, results.meta.fields);
+                        }
+                        setLoading(false);
+                    },
+                    error: (err) => {
+                        console.error(err);
+                        setError("Error de conexión. Intenta recargar.");
+                        setLoading(false);
+                    }
+                });
+            };
+            fetchData();
+        }, []);
+
+        const processRawData = (data, fields) => {
+            const headerM = fields[12]; 
+            const headerN = fields[13];
+            const headerO = fields[14]; 
+            const headerP = fields[15]; 
+
+            const processed = data.map(row => {
+                const montoF = parseMoney(row[COL.MONTO_F]);
+                const montoL = parseMoney(row[COL.MONTO_L]);
+                const estatusStr = (row[COL.ESTATUS] || '').toUpperCase();
+                
+                let esCobrado = false;
+                let montoFinal = 0;
+
+                if (montoL > 0) {
+                    esCobrado = true;
+                    montoFinal = montoL;
+                } else if (estatusStr.includes('COBRADO')) {
+                    esCobrado = true;
+                    montoFinal = montoF;
+                } else {
+                    esCobrado = false;
+                    montoFinal = montoF;
+                }
+
+                const diasVentaFact = parseIntSafe(row[headerM]); 
+                const diasVentaCobro = parseIntSafe(row[headerN]);
+                
+                const rawP = row[headerP];
+                let diasAntiguedadReal = 0;
+                let esSinFecha = false;
+
+                if (rawP && typeof rawP === 'string' && rawP.toUpperCase().includes('SIN FECHA')) {
+                    esSinFecha = true;
+                    diasAntiguedadReal = null; 
+                } else {
+                    diasAntiguedadReal = parseIntSafe(rawP);
+                }
+
+                let bucket = 'N/A';
+                let bucketClass = '';
+                
+                if (!esCobrado) {
+                    if (esSinFecha) {
+                        bucket = 'Sin Fecha';
+                        bucketClass = 'risk-sinfecha';
+                    } else {
+                        const d = diasAntiguedadReal;
+                        if (d <= 30) { bucket = 'Al Corriente'; bucketClass = 'risk-corriente'; }
+                        else if (d <= 60) { bucket = 'Bajo Riesgo'; bucketClass = 'risk-bajo'; }
+                        else if (d <= 90) { bucket = 'Medio Riesgo'; bucketClass = 'risk-medio'; }
+                        else if (d <= 180) { bucket = 'Alto Riesgo'; bucketClass = 'risk-alto'; }
+                        else { bucket = 'Incobrable'; bucketClass = 'risk-incobrable'; }
+                    }
+                }
+
+                return {
+                    ...row,
+                    _montoFinal: montoFinal,
+                    _esCobrado: esCobrado,
+                    _cliente: row[COL.CLIENTE] || row[COL.AGENCIA] || 'Desconocido',
+                    _anio: row[COL.ANIO] || 'S/A',
+                    _fechaStr: row[headerO] || '', 
+                    _dVentaFact: diasVentaFact,
+                    _dVentaCobro: diasVentaCobro,
+                    _dAntiguedad: diasAntiguedadReal, 
+                    _esSinFecha: esSinFecha,
+                    _bucket: bucket,
+                    _bucketClass: bucketClass
+                };
+            });
+            setProcessedData(processed);
+        };
+
+        const dataFiltrada = useMemo(() => {
+            return processedData.filter(row => {
+                const passAnio = filtroAnio.length === 0 || filtroAnio.includes(row._anio);
+                const passBusqueda = busqueda === '' || 
+                                     JSON.stringify(row).toLowerCase().includes(busqueda.toLowerCase());
+                return passAnio && passBusqueda;
+            });
+        }, [processedData, filtroAnio, busqueda]);
+
+        const dataOrdenada = useMemo(() => {
+            let items = [...dataFiltrada];
+            if (sortConfig.key !== null) {
+                items.sort((a, b) => {
+                    let aValue = a[sortConfig.key];
+                    let bValue = b[sortConfig.key];
+                    if (aValue === null) aValue = -999999;
+                    if (bValue === null) bValue = -999999;
+                    if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+                    if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            }
+            return items;
+        }, [dataFiltrada, sortConfig]);
+
+        const requestSort = (key) => {
+            let direction = 'asc';
+            if (sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
+            setSortConfig({ key, direction });
+            setPaginaActual(1);
+        };
+
+        const getSortIcon = (key) => {
+            if (sortConfig.key !== key) return <span className="text-slate-300 ml-1">↕</span>;
+            return sortConfig.direction === 'asc' ? <span className="text-rose-600 ml-1">↑</span> : <span className="text-rose-600 ml-1">↓</span>;
+        };
+
+        const kpis = useMemo(() => {
+            const totalCobrado = dataFiltrada.filter(r => r._esCobrado).reduce((acc, r) => acc + r._montoFinal, 0);
+            const totalPendiente = dataFiltrada.filter(r => !r._esCobrado).reduce((acc, r) => acc + r._montoFinal, 0);
+            const total = totalCobrado + totalPendiente;
+            const porcentaje = total > 0 ? (totalCobrado / total) * 100 : 0;
+            return { totalCobrado, totalPendiente, porcentaje };
+        }, [dataFiltrada]);
+
+        const timeKpis = useMemo(() => {
+            const valuesM = dataFiltrada.map(r => r._dVentaFact);
+            const statsM = calculateAverageWithoutOutliers(valuesM);
+            const valuesN = dataFiltrada.filter(r => r._esCobrado).map(r => r._dVentaCobro);
+            const statsN = calculateAverageWithoutOutliers(valuesN);
+            return { avgFact: statsM.avg, countFact: statsM.count, avgCobro: statsN.avg, countCobro: statsN.count };
+        }, [dataFiltrada]);
+
+        const chartsData = useMemo(() => {
+            const pieData = [ { name: 'Cobrado', value: kpis.totalCobrado }, { name: 'Pendiente', value: kpis.totalPendiente } ];
+            const deudaPorCliente = {};
+            dataFiltrada.forEach(row => { if (!row._esCobrado) { let nombre = row._cliente; deudaPorCliente[nombre] = (deudaPorCliente[nombre] || 0) + row._montoFinal; } });
+            const topDeudores = Object.keys(deudaPorCliente).map(key => ({ name: key, deuda: deudaPorCliente[key] })).sort((a, b) => b.deuda - a.deuda).slice(0, 10);
+            const bucketOrder = ['Al Corriente', 'Bajo Riesgo', 'Medio Riesgo', 'Alto Riesgo', 'Incobrable', 'Sin Fecha'];
+            const buckets = {}; bucketOrder.forEach(b => buckets[b] = 0);
+            dataFiltrada.forEach(r => { if (!r._esCobrado && r._bucket !== 'N/A') { buckets[r._bucket] += r._montoFinal; } });
+            const agingData = bucketOrder.map(k => ({ name: k, value: buckets[k], fill: COLORS_CXC.riskMap[k] })).filter(item => item.value > 0);
+            return { pieData, topDeudores, agingData };
+        }, [dataFiltrada, kpis]);
+
+        const listaAnios = useMemo(() => [...new Set(processedData.map(r => r._anio))].sort().reverse(), [processedData]);
+        const toggleAnio = (anio) => { setFiltroAnio(prev => prev.includes(anio) ? prev.filter(a => a !== anio) : [...prev, anio]); setPaginaActual(1); };
+
+        const dataTablaPaginada = useMemo(() => {
+            const inicio = (paginaActual - 1) * filasPorPagina;
+            return dataOrdenada.slice(inicio, inicio + filasPorPagina);
+        }, [dataOrdenada, paginaActual]);
+        
+        const totalPaginas = Math.ceil(dataOrdenada.length / filasPorPagina);
+
+        if (loading) return <div className="min-h-[60vh] flex flex-col items-center justify-center"><div className="spinner mb-4"></div><p className="text-slate-500 font-medium animate-pulse">Cargando datos CXC...</p></div>;
+        if (error) return <div className="min-h-[60vh] flex items-center justify-center text-red-600 font-bold max-w-lg mx-auto text-center px-4">{error}</div>;
+
+        return (
+            <div className="fade-in p-6 md:p-12 max-w-[1600px] mx-auto min-h-screen">
+                
+                {/* Header CXC */}
+                <header className="mb-10 flex flex-col md:flex-row justify-between items-end border-b border-slate-200 pb-6">
+                    <div>
+                        <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Análisis de Cobranza (CXC)</h1>
+                        <p className="text-slate-500 mt-1 text-sm font-medium">Estado de Cuenta y Riesgo</p>
+                    </div>
+                    <div className="mt-4 md:mt-0 flex flex-wrap gap-2 justify-end">
+                            <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-slate-400 uppercase mr-2">Año:</span>
+                            {listaAnios.map(anio => (
+                                <button key={anio} onClick={() => toggleAnio(anio)}
+                                    className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${filtroAnio.includes(anio) ? 'bg-violet-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+                                    {anio}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </header>
+
+                {/* KPIs Principales */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                    <CardCXC 
+                        title="Total Cobrado" 
+                        value={formatMoney(kpis.totalCobrado)} 
+                        subtext="Suma de facturación real" 
+                        colorClass="border-emerald-500"
+                        infoText={`1. Usa "TOTAL FACTURADO" (Col L), si es > 0.\n2. Si no hay dato, usa "MONTO SIN IVA" si el estatus dice "COBRADO".`}
+                    />
+                    <CardCXC 
+                        title="Total Pendiente (Deuda)" 
+                        value={formatMoney(kpis.totalPendiente)} 
+                        subtext="Monto no cobrado" 
+                        colorClass="border-rose-500" 
+                        infoText={`Suma del "MONTO SIN IVA" de las cuentas abiertas.\n\nSe incluye si:\n1. "TOTAL FACTURADO" es 0 o vacío.\n2. ESTATUS no indica "COBRADO".`}
+                    />
+                    <CardCXC title="% Recuperación" value={kpis.porcentaje.toFixed(1) + '%'} subtext="Eficiencia de cobro" colorClass="border-blue-500" />
+                </div>
+
+                {/* --- SECCIÓN: CICLO DE EFECTIVO --- */}
+                <div className="mb-8">
+                    <h2 className="text-xl font-bold text-slate-700 mb-4 flex items-center gap-2">
+                        <span className="w-1 h-6 bg-amber-500 rounded"></span> 
+                        Ciclo de Conversión y Riesgo
+                    </h2>
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                        <CardCXC title="Promedio: Venta → Factura" value={`${timeKpis.avgFact} Días`} subtext="Operatividad interna" colorClass="border-indigo-400" />
+                        <CardCXC title="Promedio: Venta → Cobro" value={`${timeKpis.avgCobro} Días`} subtext="Ciclo de pago cliente" colorClass="border-violet-400" />
+                        <div className="lg:col-span-2 card-pro p-6">
+                            <h3 className="text-xs font-bold text-slate-500 uppercase mb-4">Matriz de Riesgo (Días Antigüedad)</h3>
+                            <div className="h-40 w-full">
+                                <ResponsiveContainer>
+                                    <BarChart data={chartsData.agingData} layout="vertical">
+                                        <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                                        <XAxis type="number" hide />
+                                        <YAxis dataKey="name" type="category" width={100} tick={{fontSize:10}} />
+                                        <Tooltip formatter={(val) => formatMoney(val)} />
+                                        <Bar dataKey="value" radius={[0,4,4,0]}>
+                                            {chartsData.agingData.map((entry, index) => ( <Cell key={`cell-${index}`} fill={entry.fill} /> ))}
+                                            <LabelList dataKey="value" position="right" formatter={formatMoneyShort} style={{fontSize:10, fontWeight:'bold', fill:'#64748b'}} />
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Gráficas Originales */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+                    <div className="card-pro p-6 lg:col-span-1 flex flex-col">
+                        <h3 className="text-sm font-bold text-slate-700 uppercase mb-4">Composición de Cartera</h3>
+                        <div className="flex-1 min-h-[250px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie data={chartsData.pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                                        <Cell fill={COLORS_CXC.cobrado} /> <Cell fill={COLORS_CXC.pendiente} />
+                                    </Pie>
+                                    <Tooltip formatter={(val) => formatMoney(val)} />
+                                    <Legend verticalAlign="bottom" height={36}/>
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                    <div className="card-pro p-6 lg:col-span-2 flex flex-col">
+                        <h3 className="text-sm font-bold text-slate-700 uppercase mb-4">Top 10 Clientes con Deuda</h3>
+                        <div className="flex-1 min-h-[350px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={chartsData.topDeudores} layout="vertical" margin={{top: 5, right: 50, left: 20, bottom: 5}}>
+                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0"/>
+                                    <XAxis type="number" hide />
+                                    <YAxis dataKey="name" type="category" width={230} tick={{fontSize: 11, fill: '#475569'}} interval={0} />
+                                    <Tooltip formatter={(val) => formatMoney(val)} cursor={{fill: '#fef2f2'}} />
+                                    <Bar dataKey="deuda" fill={COLORS_CXC.pendiente} radius={[0, 4, 4, 0]}>
+                                        <LabelList dataKey="deuda" position="right" formatter={formatMoneyShort} style={{fontSize: '11px', fontWeight: 'bold', fill: '#be123c'}} />
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Tabla Detallada */}
+                <div className="card-pro overflow-hidden">
+                    <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <h3 className="text-sm font-bold text-slate-700 uppercase">Detalle Operativo</h3>
+                        <div className="relative w-full sm:w-auto">
+                            <input type="text" placeholder="Buscar..." className="pl-8 pr-4 py-2 text-xs border border-slate-300 rounded-lg w-full sm:w-64 outline-none"
+                                value={busqueda} onChange={(e) => { setBusqueda(e.target.value); setPaginaActual(1); }} />
+                            <span className="absolute left-2.5 top-2 text-slate-400">🔍</span>
+                        </div>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs whitespace-nowrap">
+                            <thead className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider">
+                                <tr>
+                                    <th className="px-6 py-4 sortable" onClick={() => requestSort('_fechaStr')}>
+                                        Fecha {getSortIcon('_fechaStr')}
+                                    </th>
+                                    <th className="px-6 py-4 sortable" onClick={() => requestSort('_cliente')}>
+                                        Cliente {getSortIcon('_cliente')}
+                                    </th>
+                                    <th className="px-6 py-4 text-right sortable" onClick={() => requestSort('_montoFinal')}>
+                                        Monto {getSortIcon('_montoFinal')}
+                                    </th>
+                                    <th className="px-6 py-4 text-center sortable" onClick={() => requestSort('_esCobrado')}>
+                                        Estado {getSortIcon('_esCobrado')}
+                                    </th>
+                                    <th className="px-6 py-4 text-center sortable" onClick={() => requestSort('_dVentaFact')}>
+                                        Ciclo {getSortIcon('_dVentaFact')}
+                                    </th>
+                                    <th className="px-6 py-4 text-center sortable" onClick={() => requestSort('_dAntiguedad')}>
+                                        Riesgo {getSortIcon('_dAntiguedad')}
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 bg-white">
+                                {dataTablaPaginada.map((row, i) => (
+                                    <tr key={i} className="hover:bg-slate-50 transition-colors">
+                                        <td className="px-6 py-3 text-slate-600">
+                                            {row._fechaStr || '-'}
+                                        </td>
+                                        <td className="px-6 py-3">
+                                            <div className="font-bold text-slate-700 truncate max-w-[200px]" title={row._cliente}>{row._cliente}</div>
+                                            <div className="text-[10px] text-slate-400 truncate max-w-[200px]">{row[COL.AGENCIA]}</div>
+                                        </td>
+                                        <td className="px-6 py-3 text-right font-bold text-slate-800">${row._montoFinal.toLocaleString()}</td>
+                                        <td className="px-6 py-3 text-center">
+                                            <span className={`status-badge ${row._esCobrado ? 'st-cobrado' : 'st-pendiente'}`}>
+                                                {row._esCobrado ? 'COBRADO' : 'PENDIENTE'}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-3 text-center text-slate-500">
+                                             <div className="flex flex-col text-[10px]">
+                                                <span>V→F: <b>{row._dVentaFact}</b></span>
+                                                <span>V→C: <b>{row._dVentaCobro}</b></span>
+                                             </div>
+                                        </td>
+                                        <td className="px-6 py-3 text-center">
+                                            {!row._esCobrado && row._bucket !== 'N/A' ? (
+                                                <span className={`status-badge ${row._bucketClass}`}>
+                                                    {row._esSinFecha ? 'Sin Fecha' : `${row._bucket} (${row._dAntiguedad}d)`}
+                                                </span>
+                                            ) : '-'}
+                                        </td>
+                                    </tr>
+                                ))}
+                                {dataTablaPaginada.length === 0 && <tr><td colSpan="6" className="px-6 py-8 text-center text-slate-400">Sin datos.</td></tr>}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div className="p-4 border-t border-slate-100 flex justify-between items-center bg-slate-50/50">
+                        <button onClick={() => setPaginaActual(p => Math.max(1, p - 1))} disabled={paginaActual === 1} className="px-3 py-1 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded disabled:opacity-50">Anterior</button>
+                        <span className="text-xs text-slate-500">Pág {paginaActual} de {totalPaginas}</span>
+                        <button onClick={() => setPaginaActual(p => Math.min(totalPaginas, p + 1))} disabled={paginaActual === totalPaginas} className="px-3 py-1 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded disabled:opacity-50">Siguiente</button>
+                    </div>
                 </div>
             </div>
         );
@@ -873,7 +1361,7 @@
     // APP PRINCIPAL (CONTENEDOR DE PESTAÑAS)
     // ==========================================
     const App = () => {
-        const [activeTab, setActiveTab] = useState('sales'); // 'sales' es ahora el default
+        const [activeTab, setActiveTab] = useState('sales');
 
         return (
             <div className="min-h-screen bg-slate-50 pb-20">
@@ -889,17 +1377,16 @@
                                         <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white font-bold text-xl mr-2">I</div>
                                         <span className="font-bold text-slate-800 text-lg tracking-tight">Ivan<span className="text-slate-400">Producciones</span></span>
                                     </div>
-                                    {/* Date visible on mobile right side */}
                                     <div className="sm:hidden flex items-center">
                                          <span className="text-[10px] text-slate-400 font-medium bg-slate-100 px-2 py-1 rounded-full">{new Date().toLocaleDateString()}</span>
                                     </div>
                                 </div>
 
-                                {/* Tabs - Make them visible on mobile (flex row) */}
-                                <div className="flex mt-2 sm:mt-0 sm:ml-8 w-full sm:w-auto border-t sm:border-t-0 border-slate-100 pt-1 sm:pt-0">
+                                {/* Tabs */}
+                                <div className="flex mt-2 sm:mt-0 sm:ml-8 w-full sm:w-auto border-t sm:border-t-0 border-slate-100 pt-1 sm:pt-0 overflow-x-auto">
                                     <button
                                         onClick={() => setActiveTab('sales')}
-                                        className={`flex-1 sm:flex-none text-center py-2 sm:py-0 inline-flex items-center justify-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200 ${
+                                        className={`flex-1 sm:flex-none text-center py-2 sm:py-0 inline-flex items-center justify-center px-2 pt-1 border-b-2 text-sm font-medium transition-colors duration-200 whitespace-nowrap ${
                                             activeTab === 'sales'
                                             ? 'border-rose-500 text-slate-900 bg-rose-50 sm:bg-transparent'
                                             : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
@@ -909,13 +1396,23 @@
                                     </button>
                                     <button
                                         onClick={() => setActiveTab('strategy')}
-                                        className={`flex-1 sm:flex-none text-center py-2 sm:py-0 inline-flex items-center justify-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200 ml-2 ${
+                                        className={`flex-1 sm:flex-none text-center py-2 sm:py-0 inline-flex items-center justify-center px-2 pt-1 border-b-2 text-sm font-medium transition-colors duration-200 ml-2 whitespace-nowrap ${
                                             activeTab === 'strategy'
                                             ? 'border-emerald-500 text-slate-900 bg-emerald-50 sm:bg-transparent'
                                             : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
                                         }`}
                                     >
                                         Análisis de Recompra
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab('cxc')}
+                                        className={`flex-1 sm:flex-none text-center py-2 sm:py-0 inline-flex items-center justify-center px-2 pt-1 border-b-2 text-sm font-medium transition-colors duration-200 ml-2 whitespace-nowrap ${
+                                            activeTab === 'cxc'
+                                            ? 'border-violet-500 text-slate-900 bg-violet-50 sm:bg-transparent'
+                                            : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                                        }`}
+                                    >
+                                        Cuentas por Cobrar
                                     </button>
                                 </div>
                             </div>
@@ -930,7 +1427,9 @@
 
                 {/* Contenido Dinámico */}
                 <main className="w-full">
-                    {activeTab === 'sales' ? <TabSales /> : <TabStrategy />}
+                    {activeTab === 'sales' && <TabSales />}
+                    {activeTab === 'strategy' && <TabStrategy />}
+                    {activeTab === 'cxc' && <TabCXC />}
                 </main>
 
             </div>
